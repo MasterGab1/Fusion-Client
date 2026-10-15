@@ -1,0 +1,19 @@
+node_modules/
+dist/
+release/
+release-test/
+test-output/
+*.log
+.env*
+build/runtime-cache/
+build/runtime-classes/
+build/runtime-tests/
+build/font-tools/
+release-bundle/
+# Generated build products, local publishing checkout, and QA binaries
+build/*
+!build/icon.ico
+*.bin
+*.pfx
+*.pem
+*.key

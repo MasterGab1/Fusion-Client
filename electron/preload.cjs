@@ -1,0 +1,44 @@
+const { contextBridge, ipcRenderer } = require('electron');
+const invoke = (name, ...args) => ipcRenderer.invoke(`fusion:${name}`, ...args);
+contextBridge.exposeInMainWorld('fusion', {
+  getState: () => invoke('state'),
+  getUpdates: () => invoke('updates-state'),
+  checkUpdates: () => invoke('updates-check'),
+  downloadUpdate: () => invoke('updates-download'),
+  installUpdate: () => invoke('updates-install'),
+  getVersions: (refresh = false) => invoke('versions', refresh),
+  modCatalog: (version, refresh = false) => invoke('mods-catalog', version, refresh),
+  configureMods: (version, enabled) => invoke('mods-configure', version, enabled),
+  searchMods: query => invoke('community-search', query),
+  installedMods: (version, loader) => invoke('community-list', version, loader),
+  planMods: query => invoke('community-plan', query),
+  installMods: token => invoke('community-install', token),
+  removeMod: (version, loader, id) => invoke('community-remove', version, loader, id),
+  getNews: refresh => invoke('news', refresh),
+  openArticle: url => invoke('article', url),
+  saveSettings: settings => invoke('settings', settings),
+  signIn: () => invoke('sign-in'),
+  cancelSignIn: () => invoke('cancel-sign-in'),
+  signOut: () => invoke('sign-out'),
+  launch: version => invoke('launch', version),
+  cancelLaunch: () => invoke('cancel-launch'),
+  openFolder: () => invoke('open-folder'),
+  openLink: key => invoke('open-link', key),
+  pickJava: () => invoke('pick-java'),
+  pickBackground: family => invoke('background', family),
+  resetBackground: family => invoke('background-reset', family),
+  getSkins: () => invoke('skins-list'),
+  importSkin: () => invoke('skins-import'),
+  lookupSkin: username => invoke('skins-lookup', username),
+  currentSkin: () => invoke('skins-current'),
+  selectSkin: (id, model) => invoke('skins-select', id, model),
+  exportSkin: id => invoke('skins-export', id),
+  removeSkin: id => invoke('skins-remove', id),
+  applySkin: (id, model) => invoke('skins-apply', id, model),
+  windowAction: action => invoke('window', action),
+  onEvent: callback => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('fusion:event', listener);
+    return () => ipcRenderer.removeListener('fusion:event', listener);
+  },
+});

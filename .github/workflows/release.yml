@@ -1,0 +1,37 @@
+name: Build Fusion release
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:mods
+      - run: npx electron-builder --win nsis --x64 --publish never
+      - run: npm run build:installer
+      - run: npm run release:prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fusion-Windows
+          path: release-bundle/**
+      - name: Create draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = node -p "require('./package.json').version"
+          $assets = Get-ChildItem -LiteralPath "release-bundle/$version" -File | Select-Object -ExpandProperty FullName
+          gh release create "v$version" @assets --draft --title "Fusion $version" --notes "Fusion Launcher for Windows. Browser sign-in, Discord Rich Presence, and in-game Fusion mods."

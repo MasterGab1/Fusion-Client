@@ -1,0 +1,21 @@
+.app-shell { display: grid; grid-template-columns: 69px minmax(0, 1fr); grid-template-rows: 53px minmax(0, 1fr) 31px; }
+.titlebar { grid-column: 1 / -1; height: 53px; }
+.wordmark { padding-left: 20px; }
+.titlebar-right { display: flex; align-items: center; height: 100%; -webkit-app-region: no-drag; }
+.titlebar-right .account-button { margin-right: 17px; padding: 4px 9px 4px 4px; border-color: #2b2d35; }
+.titlebar-right .account-avatar { height: 27px; width: 27px; }
+.titlebar-right .account-button strong { font-size: 10px; }
+.titlebar-right .account-button small { font-size: 8px; margin-top: 2px; }
+.titlebar-edition { left: 44%; }
+.sidebar { grid-row: 2 / 4; grid-column: 1; display: flex; flex-direction: column; align-items: center; gap: 13px; padding: 21px 0 17px; border-right: 1px solid #292b33; background: #15161a; z-index: 9; }
+.rail-button { position: relative; height: 43px; width: 43px; display: grid; place-items: center; color: #797e8b; border-radius: 7px; border: 1px solid transparent; }
+.rail-button:hover { color: #e2c8d5; background: #25222b; }
+.rail-button.active { color: #ef90b4; background: #352530; border-color: #654052; }
+.rail-button.active:before { content: ''; position: absolute; left: -14px; height: 21px; width: 3px; border-radius: 0 3px 3px 0; background: #ec7ca6; }
+.rail-button.rail-bottom { margin-top: auto; }
+.rail-tooltip { visibility: hidden; opacity: 0; pointer-events: none; position: absolute; left: calc(100% + 16px); top: 50%; transform: translateY(-50%); padding: 8px 11px; border: 1px solid #48434e; border-radius: 5px; background: #27232c; color: #eae3e9; font-size: 11px; font-weight: 500; white-space: nowrap; box-shadow: 0 4px 16px #0005; transition: opacity .12s; }
+.rail-button:hover .rail-tooltip, .rail-button:focus-visible .rail-tooltip { visibility: visible; opacity: 1; }
+.app-shell > main { grid-column: 2; grid-row: 2; min-width: 0; }
+.statusbar { grid-column: 2; grid-row: 3; }
+.logs-panel { left: 70px; }
+@media(max-width:1050px) { .titlebar-edition { left: 41%; font-size: 8px; } }

@@ -1,0 +1,17 @@
+const { _electron: electron, expect } = require('@playwright/test');
+const path=require('path'),fs=require('fs/promises'),os=require('os');
+(async()=>{const root=path.resolve(__dirname,'..'), data=await fs.mkdtemp(path.join(os.tmpdir(),'fusion-persistence-'));const env={...process.env,FUSION_TEST_DATA:data};delete env.ELECTRON_RUN_AS_NODE;
+await fs.mkdir(path.join(data,'backgrounds'));await fs.copyFile('public/assets/branding/pink.png',path.join(data,'backgrounds/1.8.jpg'));
+await fs.writeFile(path.join(data,'settings.json'),JSON.stringify({autoCheckUpdates:false,discordPresence:false}));
+const app=await electron.launch({executablePath:require('electron'),args:[path.join(root,'scripts/headless-entry.cjs')],env});
+try{const page=await app.firstWindow();await expect(page.getByRole('button',{name:'Reset background',exact:true})).toBeVisible();await page.getByRole('button',{name:'Reset background',exact:true}).click();await expect(page.getByRole('button',{name:'Reset background',exact:true})).toHaveCount(0);expect((await page.evaluate(()=>window.fusion.resetBackground('../../outside'))).ok).toBe(false);
+await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Memory',{exact:true})).toBeVisible();
+const patches=[{memory:3},{width:1440},{height:900},{fullscreen:true},{downloadThreads:3},{verifyFiles:true},{minimizeOnLaunch:false},{restoreAfterGame:false},{reducedMotion:true},{accent:'violet'},{launchMode:'vanilla'},{backgroundFps:15},{particleDistance:16},{autoCheckUpdates:false},{discordPresence:false}];
+const responses=await page.evaluate(patches=>Promise.all(patches.map(p=>window.fusion.saveSettings(p))),patches);expect(responses.every(x=>x.ok)).toBe(true);const expected=Object.assign({},...patches);let persisted=JSON.parse(await fs.readFile(path.join(data,'settings.json'),'utf8'));for(const [k,v]of Object.entries(expected))expect(persisted[k]).toBe(v);
+await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Start fullscreen').uncheck();await page.getByLabel('Minimize launcher on play').check();await page.getByRole('tab',{name:'Appearance',exact:true}).click();await page.getByRole('button',{name:'Blue theme'}).click();await page.getByRole('button',{name:'Play',exact:true}).click();await expect.poll(async()=>JSON.parse(await fs.readFile(path.join(data,'settings.json'),'utf8')).accent).toBe('blue');
+persisted=JSON.parse(await fs.readFile(path.join(data,'settings.json'),'utf8'));expect(persisted.fullscreen).toBe(false);expect(persisted.minimizeOnLaunch).toBe(true);await page.reload();await expect(page.locator('.app-shell')).toHaveAttribute('data-accent','blue');
+await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(980,660));await page.getByRole('button',{name:'Settings',exact:true}).click();await page.waitForTimeout(400);
+const shot=await app.evaluate(async({BrowserWindow})=>(await BrowserWindow.getAllWindows()[0].webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG().toString('base64'));await fs.writeFile('test-output/v0.10/settings-small.png',Buffer.from(shot,'base64'));
+expect(await page.locator('main').evaluate(el=>el.scrollHeight<=el.clientHeight+1)).toBe(true);
+console.log('PASS background reset, path guard, 15 concurrent setting patches, autosave/navigation/reload, compact settings without scrolling.');
+}finally{await app.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

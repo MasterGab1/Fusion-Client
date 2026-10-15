@@ -1,0 +1,9 @@
+const fs=require('fs'),os=require('os'),path=require('path'),assert=require('assert/strict'),{execFileSync,spawnSync}=require('child_process');
+const csc=path.join(process.env.WINDIR,'Microsoft.NET/Framework64/v4.0.30319/csc.exe');const target=fs.mkdtempSync(path.join(os.tmpdir(),'fusion-installer-'));const engine=path.join(target,'mock.exe');
+execFileSync(csc,['/nologo','/target:winexe',`/out:${engine}`,path.resolve('scripts/java/MockEngine.cs')],{stdio:'inherit',windowsHide:true});
+execFileSync(process.execPath,['scripts/build-installer.cjs','--test-engine',engine],{stdio:'inherit',windowsHide:true});const setup=path.resolve('build/Fusion-Setup-Preview.exe');const folder=path.join(target,'Folder with spaces'),log=path.join(target,'args.txt');const env={...process.env,FUSION_INSTALLER_QA_LOG:log};
+let result=spawnSync(setup,['/S','--updated','--force-run','/D='+folder],{env,windowsHide:true,timeout:30000});assert.equal(result.status,0);assert.deepEqual(fs.readFileSync(log,'utf8').trim().split(/\r?\n/),['/S','--updated','--force-run','/D='+folder]);
+result=spawnSync(setup,['/S'],{env:{...env,FUSION_INSTALLER_QA_EXIT:'37'},windowsHide:true,timeout:30000});assert.equal(result.status,37);
+result=spawnSync(setup,['--qa-install',folder],{env,windowsHide:true,timeout:30000});assert.equal(result.status,0);assert.match(fs.readFileSync(path.join(folder,'result.txt'),'utf8'),/Fusion is ready/);assert.match(fs.readFileSync(log,'utf8'),/--no-desktop-shortcut/);
+result=spawnSync(setup,['--qa-install',folder],{env:{...env,FUSION_INSTALLER_QA_EXIT:'37'},windowsHide:true,timeout:30000});assert.equal(result.status,1);assert.match(fs.readFileSync(path.join(folder,'result.txt'),'utf8'),/code 37/);assert.match(fs.readFileSync(path.join(folder,'result.txt'),'utf8'),/Retry install/);
+console.log('PASS custom installer: silent argument forwarding, spaces, exit codes, real WPF progress/completion and retry flow with isolated mock engine.');
