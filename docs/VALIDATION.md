@@ -6,7 +6,7 @@
 - Hidden Electron checks cover background reset/path validation, 15 simultaneous setting patches, autosave across navigation/reload, compact settings at 980 × 660, browser-login cancellation, community mod dependency downloads, news and themes.
 - Native WPF setup compiles with the official NSIS payload. Isolated mock-engine tests cover silent argument forwarding, paths with spaces, exit codes, desktop shortcut flags, progress/completion and retry UI. The real installer was not run over the user's installation.
 - Runtime 0.4.0 supplies all 49 existing releases. Static member audits and JVM verification of generated screens plus all four instrumented hook classes pass for every release. New families and snapshots are not added. Full gameplay/GPU checks across all releases remain manual.
-- The final installer has a regenerated blockmap and SHA-512 metadata. Source/release publication to the private repository is authorized for this release.
+- The 118,802,944-byte official installer has a regenerated blockmap and SHA-512 metadata. Source and v0.10.0 were published to the verified-private repository. A real electron-updater client authenticated through Git Credential Manager, discovered the release, downloaded all bytes and verified the installer checksum in an isolated cache. Installation was not invoked.
 - Minecraft registration approval remains outside launcher code. Authentication diagnostics now distinguish explicit invalid-registration errors from other HTTP 403 responses.
 
 

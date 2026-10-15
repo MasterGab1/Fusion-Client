@@ -85,6 +85,6 @@ UI checks use isolated data and hidden Electron windows. Installer tests use an 
 
 ## Verification and limits
 
-This release passes settings/authentication/download tests, hidden launcher UI checks, custom installer flow checks, and mapped-member/JVM screen checks for all 49 releases. These checks do not replace a gameplay run on every GPU and release. No FPS improvement claim is based on a benchmark. Real account sign-in still depends on Minecraft accepting Fusion's application registration.
+This release passes settings/authentication/download tests, hidden launcher UI checks, custom installer flow checks, a live authenticated private update download/checksum check, and mapped-member/JVM screen checks for all 49 releases. These checks do not replace a gameplay run on every GPU and release. No FPS improvement claim is based on a benchmark. Real account sign-in still depends on Minecraft accepting Fusion's application registration.
 
 Fusion is an independent launcher and is not affiliated with Mojang or Microsoft. Third-party library notices are included in the application assets and runtime. Logos and version artwork are project-supplied assets; inclusion here does not grant additional rights to Minecraft artwork.
