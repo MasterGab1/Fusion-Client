@@ -1,5 +1,7 @@
 ## 0.11 launcher, mod interoperability and uninstall — 16 October 2026
 
+- Official 0.11.0 Windows installer built and published to the private repository. Packaged ASAR checks confirm Runtime 0.5.0 integrity, all five logos, 49 existing releases and the custom uninstaller. Hidden UI checks also pass when loading the packaged application.
+- The private updater authenticated with local Git Credential Manager, found 0.11.0 and downloaded the complete 119,227,904-byte installer with a matching SHA-512. Installation was not invoked. Installer SHA-256: `07725D2C6C5BC754D54CBD4990F4A267E435CE24AF44201ECE4C764DE3A39AAB`.
 - 51 Node tests pass, including combined dependency plans and official-launcher profile preservation/argument quoting.
 - Hidden Electron checks pass for selection across searches, real four-mod batch installation, dependency deletion guards, theme logos, skins library filter, output size persistence and minimum-window layout.
 - Real Fabric probes cover 1.16.5, 1.20.1 with Mod Menu/Fabric API, 1.21.11 and 26.1.2; legacy Forge probes cover 1.8.9 and 1.12.2. Probes exit before gameplay and check shared runtime classes, hook installation and generated screen linking. Latest 1.20.1/1.8.9 probes also paint the overlay through the real loader.
