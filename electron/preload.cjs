@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const invoke = (name, ...args) => ipcRenderer.invoke(`fusion:${name}`, ...args);
 contextBridge.exposeInMainWorld('fusion', {
+  appearance: { accent: process.argv.find(a => a.startsWith('--fusion-accent='))?.split('=')[1] || 'pink', reducedMotion: process.argv.includes('--fusion-motion=reduced') },
   getState: () => invoke('state'),
   getUpdates: () => invoke('updates-state'),
   checkUpdates: () => invoke('updates-check'),
@@ -9,6 +10,13 @@ contextBridge.exposeInMainWorld('fusion', {
   getVersions: (refresh = false) => invoke('versions', refresh),
   modCatalog: (version, refresh = false) => invoke('mods-catalog', version, refresh),
   configureMods: (version, enabled) => invoke('mods-configure', version, enabled),
+  searchPacks: query => invoke('packs-search',query),
+  installedPacks: () => invoke('packs-list'),
+  planPack: query => invoke('packs-plan',query),
+  importPack: () => invoke('packs-import'),
+  installPack: token => invoke('packs-install',token),
+  launchPack: id => invoke('packs-launch',id),
+  packFolder: id => invoke('packs-folder',id),
   searchMods: query => invoke('community-search', query),
   installedMods: (version, loader) => invoke('community-list', version, loader),
   planMods: query => invoke('community-plan', query),

@@ -2,6 +2,12 @@
 
 Fusion is a Windows desktop launcher. It does not ship a borrowed Microsoft client ID. You need a Microsoft application registration belonging to your project, and that application must be permitted to access Minecraft Java services.
 
+## Local testing without Microsoft sign-in
+
+Open the account button, choose **Local testing**, enter a name (3–16 letters, numbers or underscores), and click **Use local profile**. Launch normally from Play or My packs. Press Right Shift in a world to open Fusion's menu. No Microsoft session is used in this mode. Online-mode servers and account skin uploads require Microsoft authentication. The first launch still downloads game files and Java from the official services.
+
+Choose the Microsoft tab to return to a Microsoft account. A failed Microsoft sign-in never silently switches to local testing.
+
 ## Test with your official Minecraft Launcher account
 
 If Fusion's direct sign-in is rejected, you can prepare a Fusion installation for the official Minecraft Launcher:

@@ -18,7 +18,7 @@ Press **Right Shift** in a world to open the Fusion Mods menu. All mods, HUD, an
 
 Worlds remain isolated: Vanilla uses `instances/<version>` and Fusion uses `instances/<version>-performance`. The latter name is retained to preserve existing worlds. Files tracked by the previous third-party preset are renamed `.disabled` during migration; user-added JARs are preserved. Fabric and Forge use their own isolated game folders and load third-party JARs alongside Fusion.
 
-The runtime has no network access, telemetry, account handling, or server changes. Its three hooks run in the client. A runtime integrity check precedes installation. Microsoft account verification remains mandatory in the launcher’s main process. No Test edition is distributed.
+The runtime has no network access, telemetry, account handling, or server changes. Its three hooks run in the client. A runtime integrity check precedes installation. Microsoft mode verifies the account in the launcher’s main process. An explicitly selected Local testing profile can launch singleplayer without Microsoft sign-in; there is no separate Test edition.
 
 ## Building
 

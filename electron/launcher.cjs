@@ -110,7 +110,7 @@ class GameLauncher {
     return javaPath;
   }
 
-  async start(versionId, settings) {
+  async start(versionId, settings, instance = null) {
     if (this.busy || this.running) throw new Error('Minecraft is already launching or running.');
     if (typeof versionId !== 'string' || !/^[a-z0-9_.+-]+$/i.test(versionId)) throw new Error('Choose a valid Minecraft version.');
     if (!familyOf(versionId)) throw new Error('Choose a release from one of the supported version families.');
@@ -118,11 +118,12 @@ class GameLauncher {
     this.cancelled = false;
     let token = '';
     try {
-      this.status('Verifying Microsoft account');
-      // Authentication happens in the main process; renderer-provided identities are never accepted.
-      const initialSession = await this.auth.verifyForLaunch(settings.clientId);
+      const local = settings.accountMode === 'local';
+      this.status(local ? 'Preparing local testing profile' : 'Verifying Microsoft account');
+      // Identity comes from validated main-process settings. Microsoft mode never falls back to a local identity.
+      const initialSession = local ? require('./local-profile.cjs').localSession(settings.localName) : await this.auth.verifyForLaunch(settings.clientId);
       const verifiedAt = Date.now();
-      if (initialSession?.local) throw new Error('A Microsoft account is required. Local profiles are not supported.');
+      if (!local && initialSession?.local) throw new Error('A Microsoft account is required. Local profiles are not supported.');
       this.checkCancelled();
       const { Version, launch } = require('@xmcl/core');
       const { installTask } = require('@xmcl/installer');
@@ -134,7 +135,7 @@ class GameLauncher {
       const performance = settings.launchMode === 'performance';
       const community = ['fabric', 'forge'].includes(settings.launchMode);
       if (community) await this.community?.list(versionId, settings.launchMode);
-      const gamePath = path.join(this.root, 'instances', performance ? `${versionId}-performance` : community ? `${versionId}-${settings.launchMode}` : versionId);
+      const gamePath = instance?.gamePath || path.join(this.root, 'instances', performance ? `${versionId}-performance` : community ? `${versionId}-${settings.launchMode}` : versionId);
       await fs.mkdir(gamePath, { recursive: true });
       this.log(`Preparing Minecraft ${versionId}. The first launch downloads game files.`);
       this.status('Downloading & verifying game files');
@@ -150,7 +151,7 @@ class GameLauncher {
       const javaPath = await this.javaFor(version, settings);
       if (community) {
         const { prepareLoader } = require('./loaders.cjs');
-        version = await prepareLoader({ version: versionId, loader: settings.launchMode, resourcePath, javaPath, settings, launcher: this });
+        version = await prepareLoader({ version: versionId, loader: settings.launchMode, resourcePath, javaPath, settings, launcher: this, loaderVersion: instance?.loaderVersion });
       }
       if (performance || community) {
         if (!this.mods) throw new Error('The mod manager is unavailable.');
@@ -160,16 +161,16 @@ class GameLauncher {
       const windowedJava = javaPath.replace(/java\.exe$/i, 'javaw.exe');
       const gameJava = await fs.access(windowedJava).then(() => windowedJava, () => javaPath);
       this.checkCancelled();
-      this.status('Confirming online session');
-      // A long download cannot turn a stale or disconnected session into an offline launch.
-      const session = Date.now() - verifiedAt > 120000 ? await this.auth.verifyForLaunch(settings.clientId) : initialSession;
-      if (session.local) throw new Error('A Microsoft account is required. Local profiles are not supported.');
+      this.status(local ? 'Starting local session' : 'Confirming online session');
+      // Reverify Microsoft sessions after long downloads; local testing is an explicit separate mode.
+      const session = !local && Date.now() - verifiedAt > 120000 ? await this.auth.verifyForLaunch(settings.clientId) : initialSession;
+      if (!local && session.local) throw new Error('A Microsoft account is required. Local profiles are not supported.');
       this.checkCancelled();
-      token = session.accessToken;
+      token = local ? '' : session.accessToken;
       this.status('Starting Minecraft');
       const child = await launch({
         gamePath, resourcePath, version, javaPath: gameJava,
-        accessToken: session.accessToken, gameProfile: session.profile, userType: 'msa',
+        accessToken: session.accessToken, gameProfile: session.profile, userType: local ? 'legacy' : 'msa',
         launcherName: 'Fusion', launcherBrand: 'Fusion',
         minMemory: 1024, maxMemory: settings.memory * 1024,
         resolution: { width: settings.width || 1280, height: settings.height || 720, ...(settings.fullscreen ? { fullscreen: true } : {}) },
@@ -188,7 +189,7 @@ class GameLauncher {
       this.status('Minecraft is running', 100);
       this.emit('game-started', { version: versionId });
       this.log(`Launched ${versionId} as ${session.profile.name}.`);
-      const output = data => this.log(String(data).replaceAll(token, '[redacted]').slice(0, 12000), 'game');
+      const output = data => this.log((token ? String(data).replaceAll(token, '[redacted]') : String(data)).slice(0, 12000), 'game');
       child.stdout?.on('data', output);
       child.stderr?.on('data', output);
       child.on('error', () => { this.emit('game-closed', {}); this.running = false; this.status('Could not start Minecraft'); this.log('Minecraft could not start. Check the Java setting and game output.', 'error'); });

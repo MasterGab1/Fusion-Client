@@ -29,6 +29,7 @@ const fs = require('node:fs/promises');
     await expect(page.getByRole('button', { name: /^Launch 1.20.1/ })).toBeVisible();
     await app.evaluate(({ shell }) => { shell.openExternal = async url => { global.__openedAuthUrl = url; }; });
     await page.getByRole('button', { name: /^Launch 1.20.1/ }).click();
+    await page.getByRole('button', { name: 'Continue with Microsoft' }).click();
     await expect(page.getByRole('button', { name: 'Waiting for Microsoft…' })).toBeVisible();
     const authURL = await app.evaluate(() => global.__openedAuthUrl);
     expect(new URL(new URL(authURL).searchParams.get('redirect_uri')).hostname).toBe('localhost');

@@ -6,11 +6,12 @@ async function metadata(url) {
   if (!response.ok) throw new Error('The mod loader service is unavailable. Retry the launch.');
   return response.json();
 }
-async function prepareLoader({ version, loader, resourcePath, javaPath, settings, launcher }) {
+async function prepareLoader({ version, loader, resourcePath, javaPath, settings, launcher, loaderVersion }) {
   context(version, loader);
   const { Version } = require('@xmcl/core');
   const installer = require('@xmcl/installer');
-  const file = path.join(resourcePath, `fusion-${version}-${loader}.json`);
+  if (loaderVersion && !/^[0-9]+(?:\.[0-9]+){1,3}$/.test(loaderVersion)) throw new Error('Unsupported modpack loader version.');
+  const file = path.join(resourcePath, `fusion-${version}-${loader}${loaderVersion ? '-'+loaderVersion : ''}.json`);
   let cached;
   try { cached = JSON.parse(await fs.readFile(file, 'utf8')); } catch {}
   if (cached?.id && !settings.verifyFiles) {
@@ -21,12 +22,12 @@ async function prepareLoader({ version, loader, resourcePath, javaPath, settings
   let installed;
   if (loader === 'fabric') {
     const releases = await metadata(`https://meta.fabricmc.net/v2/versions/loader/${version}`);
-    const release = releases.find(r => r.loader.stable) || releases[0];
+    const release = loaderVersion ? releases.find(r => r.loader.version === loaderVersion) : releases.find(r => r.loader.stable) || releases[0];
     if (!release) throw new Error(`Fabric is not available for Minecraft ${version}. Choose another profile.`);
     installed = await installer.installFabric({ minecraftVersion: version, version: release.loader.version, minecraft: resourcePath, ...options });
   } else {
     const { promos } = await metadata('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json');
-    const release = promos[`${version}-recommended`] || promos[`${version}-latest`];
+    const release = loaderVersion || promos[`${version}-recommended`] || promos[`${version}-latest`];
     if (!release || !/^[0-9.]+$/.test(release)) throw new Error(`Forge is not available for Minecraft ${version}. Try Fabric or Fusion.`);
     const artifact = `${version}-${release}${/^1\.8(?:\.|$)/.test(version) ? `-${version}` : ''}`;
     const installerUrl = `https://maven.minecraftforge.net/net/minecraftforge/forge/${artifact}/forge-${artifact}-installer.jar`;

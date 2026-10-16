@@ -2,7 +2,7 @@
   <img src="public/assets/branding/pink.png" width="112" alt="Fusion logo" />
   <h1>FUSION</h1>
   <p>A desktop launcher for Minecraft: Java Edition.</p>
-  <p><b>Windows x64</b> · Browser sign-in · Custom installer · Built-in mods</p>
+  <p><b>Windows x64</b> · Browser sign-in · Local testing · Custom installer · Built-in mods</p>
   <p><a href="https://github.com/MasterGab1/Fusion-Client/releases/latest">Download Fusion</a> · <a href="docs/MICROSOFT-SETUP.md">Sign-in help</a> · <a href="docs/UPDATES.md">Updates</a></p>
 </div>
 
@@ -15,7 +15,7 @@ Launch from the artwork, jump between favorite releases, or search the version p
 | | Included |
 |---|---|
 | **Play** | One-click version shortcuts, family picker, bundled artwork, custom background import and reset |
-| **Mods** | Fusion HUD, Focus and Particles; community mod discovery and automatic required dependencies |
+| **Mods** | Fusion HUD, Focus and Particles; batch community downloads and isolated modpack instances |
 | **Skins** | 3D preview, classic/slim models, PNG library, username downloads, account uploads |
 | **News** | Official Minecraft stories with banners and cached reading |
 | **Preferences** | Autosave, compact categories, memory/Java controls, five accent themes, motion controls and resizable output |
@@ -47,11 +47,17 @@ The same eight version families remain available: **1.8 · 1.12 · 1.16 · 1.18 
 
 Fusion's built-in modules also run alongside supported Fabric and Forge profiles. Select several mods across searches, then download them together with shared dependencies. The in-game Installed category lists your third-party mods. Downloads come from Modrinth, with required dependencies resolved and files verified before installation. See [community mods](docs/COMMUNITY-MODS.md).
 
+## Modpacks
+
+Open **Mods → Modpacks** to browse packs for the selected Minecraft release, or import an **.mrpack** file. Review the files, create an instance, then launch from **My packs**. Packs keep their exact loader version, mods and client configuration together in separate folders. Fabric and Forge packs using the existing version list are supported; Quilt, NeoForge and CurseForge ZIP imports are not supported in this release. Optional pack files are skipped.
+
+![Fusion modpacks](docs/images/modpacks.png)
+
 ## Install once, update in place
 
 ![Fusion installer](docs/images/installer.png)
 
-Download `Fusion-Setup-0.11.0.exe` from [Releases](https://github.com/MasterGab1/Fusion-Client/releases). Choose a folder and shortcut preference, then launch Fusion. The custom setup and uninstaller use the established NSIS engine. Uninstalling preserves your worlds, mods, skins and preferences.
+Download `Fusion-Setup-0.12.0.exe` from [Releases](https://github.com/MasterGab1/Fusion-Client/releases). Choose a folder and shortcut preference, then launch Fusion. The custom setup and uninstaller use the established NSIS engine. Uninstalling preserves your worlds, mods, skins and preferences.
 
 Future releases download through **Updates** and install when you restart Fusion. Worlds, skins, settings and custom artwork remain in your Windows user-data folder.
 
@@ -59,7 +65,7 @@ Future releases download through **Updates** and install when you restart Fusion
 
 ## Microsoft sign-in
 
-Sign-in opens your browser and returns to Fusion through PKCE authorization. Direct launches verify a renewable Microsoft session, Java ownership and a Minecraft profile. There is one official edition and no offline-account mode.
+Sign-in opens your browser and returns to Fusion through PKCE authorization. Microsoft-mode launches verify a renewable session, Java ownership and a Minecraft profile. **Account → Local testing** lets you select a player name and test singleplayer and the Fusion menu without Microsoft sign-in. Local profiles do not authenticate to online-mode servers or upload account skins. Initial game/Java downloads still need an internet connection. There is one application build.
 
 The public Microsoft application ID is bundled, so players do not enter application IDs or device codes. The application's owner must configure its localhost redirect and obtain any required Minecraft API access. A server-side registration rejection cannot be fixed by rebuilding the launcher. For testing with your existing official launcher account, use **Sign in → Prepare Fusion installation**, then launch the generated Fusion installation from Minecraft Launcher. Fusion never imports its account files or tokens. Follow the [Microsoft setup guide](docs/MICROSOFT-SETUP.md).
 
@@ -79,7 +85,7 @@ npm test
 npm run dist
 ```
 
-The final installer and update metadata are in `release-bundle/0.11.0/`. `npm run dev` starts the desktop development app. Nothing is published by `npm run dist`.
+The final installer and update metadata are in `release-bundle/0.12.0/`. `npm run dev` starts the desktop development app. Nothing is published by `npm run dist`.
 
 ```powershell
 npm run test:ui
@@ -92,6 +98,6 @@ UI checks use isolated data and hidden Electron windows. Installer tests use an 
 
 ## Verification and limits
 
-Validation includes 51 unit tests, hidden launcher UI checks with real batch mod downloads, installer/uninstaller mock-engine checks, runtime rendering tests, and real Fabric/legacy Forge prelaunch probes. The same 49 vanilla runtime profiles remain available, with 36 Fabric and 39 Forge mappings. Modern Forge profiles have not had equivalent live-loader QA. These checks do not replace gameplay testing on every release. No measured FPS gain is claimed. Direct Fusion sign-in and the official-launcher handoff still need a real-account check; direct sign-in depends on Minecraft accepting Fusion's application registration.
+Validation includes 57 unit tests, hidden launcher UI checks with real batch mod downloads, installer/uninstaller mock-engine checks, runtime rendering tests, and real Fabric/legacy Forge prelaunch probes. The same 49 vanilla runtime profiles remain available, with 36 Fabric and 39 Forge mappings. Modern Forge profiles have not had equivalent live-loader QA. These checks do not replace gameplay testing on every release. No measured FPS gain is claimed. Direct Fusion sign-in and the official-launcher handoff still need a real-account check; direct sign-in depends on Minecraft accepting Fusion's application registration.
 
 Fusion is an independent launcher and is not affiliated with Mojang or Microsoft. Third-party library notices are included in the application assets and runtime. Logos and version artwork are project-supplied assets; inclusion here does not grant additional rights to Minecraft artwork.

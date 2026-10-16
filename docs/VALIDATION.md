@@ -1,3 +1,10 @@
+## 0.12 local testing, modpacks and startup theme — 16 October 2026
+
+- 57 Node tests pass. New checks cover deterministic local player UUIDs, explicit mode selection, launch options without Microsoft calls, modpack path/host restrictions, client/server file rules, layered configuration, checksum rejection and isolated atomic installation.
+- Hidden Electron checks verify saved green styling from the first observed render, local-profile persistence and launch routing, centered install dialogs after scrolling at 980 × 660, and real Modrinth pack search/download.
+- Fabulously Optimized 5.4.1 for Minecraft 1.20.1 installed 51 files into an isolated instance. Its saved Fabric 0.14.23 pin is passed to launch. A separate real-loader probe with that pack's files passed Fusion hook installation and menu rendering/linking before opening a game window.
+- UI launch operations were intercepted to avoid taking focus. Real singleplayer gameplay, account uploads and arbitrary pack compatibility are not claimed as tested.
+
 ## 0.11 launcher, mod interoperability and uninstall — 16 October 2026
 
 - Official 0.11.0 Windows installer built and published to the private repository. Packaged ASAR checks confirm Runtime 0.5.0 integrity, all five logos, 49 existing releases and the custom uninstaller. Hidden UI checks also pass when loading the packaged application.

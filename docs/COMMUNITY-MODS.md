@@ -15,10 +15,18 @@ Files come from Modrinth's official CDN. Fusion checks the declared size, SHA-51
 
 All folders are under `%APPDATA%\Fusion Launcher`. Minecraft resources and Java downloads are shared. Worlds are not copied or migrated when switching profiles. Fusion uses loader-specific mappings to run its modules with supported Fabric/Forge releases. The current version picker is unchanged; unavailable loader combinations return a clear error.
 
-On the first launch, Fusion installs an official Fabric or Forge loader and its libraries. Later launches reuse the completed loader install. Forge's installer is checked against its official SHA-1; Modrinth JARs use SHA-512. The Microsoft license/account check is still mandatory. Unsupported game/loader combinations return an error rather than launching Vanilla with unloaded mods.
+On the first launch, Fusion installs an official Fabric or Forge loader and its libraries. Later launches reuse the completed loader install. Forge's installer is checked against its official SHA-1; Modrinth JARs use SHA-512. Microsoft mode verifies the account; explicit Local testing profiles can also launch these instances. Unsupported game/loader combinations return an error rather than launching Vanilla with unloaded mods.
 
-There is no CurseForge key or integration in this build: the owner chose Modrinth only. Mod updates, NeoForge, Quilt, modpacks, automatic game-crash diagnosis. The in-game menu lists installed third-party mods; it does not replace their configuration screens.
+There is no CurseForge key or integration in this build: the owner chose Modrinth only. Mod updates, NeoForge, Quilt, automatic game-crash diagnosis. The in-game menu lists installed third-party mods; it does not replace their configuration screens.
 
 Developer validation: `npm test` covers dependency resolution and atomic changes with fixtures. `npm run test:ui` exercises real Modrinth search/downloads in isolated temporary data, inside a hidden Electron window. Live services are required for this UI test. No game window opens and production authentication is not bypassed.
 
 References: [Modrinth API](https://docs.modrinth.com/api/), [Fabric mod installation](https://docs.fabricmc.net/players/installing-mods), [Forge downloads](https://files.minecraftforge.net/).
+
+## Modpack instances (0.12)
+
+Mods → Modpacks supports browsing and importing Modrinth .mrpack archives. Each pack is installed into its own `packs/<id>/game` folder. Exact file hashes and sizes are checked; downloads stream to disk with four workers. Client override files apply after common overrides, and server-only files are excluded. Optional files are skipped and counted in the preview. Minecraft and loader versions come from the manifest; the loader cache includes the pinned loader version. Pack profiles do not mix with ordinary mod-library installations.
+
+Archives have path traversal, Windows device-name, duplicate-path, symbolic-link and expanded-size checks. Staging becomes a visible instance only after all downloads and configuration files succeed. The current Minecraft catalog is unchanged. Fabric and Forge are supported; NeoForge, Quilt and CurseForge ZIP packs are rejected clearly.
+
+Format reference: [Modrinth .mrpack specification](https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack).

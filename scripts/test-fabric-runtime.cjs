@@ -3,12 +3,14 @@ const {Version,generateArguments}=require('@xmcl/core');
 const {GameLauncher}=require('../electron/launcher.cjs');
 const {prepareLoader}=require('../electron/loaders.cjs');
 (async()=>{
- const version=process.argv[2]||'1.20.1',resourcePath=path.resolve('test-output/downloads/minecraft'),gamePath=path.resolve(`test-output/loader-qa/fabric-${version}`);
+ const version=process.argv[2]||'1.20.1',resourcePath=path.resolve('test-output/downloads/minecraft'),gamePath=path.resolve(`test-output/loader-qa/fabric-${version}${process.argv.some(a=>a.startsWith('--pack='))?'-pack':''}`);
+ const loaderVersion=process.argv.find(a=>a.startsWith('--loader='))?.slice(9),packPath=process.argv.find(a=>a.startsWith('--pack='))?.slice(7);
  const launcher=new GameLauncher({root:path.resolve('test-output/downloads'),emit:()=>{},log:()=>{}});
  const settings={downloadThreads:8,verifyFiles:false,memory:2};
  try{
  const vanilla=await Version.parse(resourcePath,version),javaPath=await launcher.javaFor(vanilla,settings);
- const resolved=await prepareLoader({version,loader:'fabric',resourcePath,javaPath,settings,launcher});
+ const resolved=await prepareLoader({version,loader:'fabric',resourcePath,javaPath,settings,launcher,loaderVersion});
+ if(packPath){await fs.mkdir(gamePath,{recursive:true});await fs.cp(packPath,gamePath,{recursive:true});}
  if(process.argv.includes('--community')) {
    const {CommunityMods}=require('../electron/community-mods.cjs');const service=new CommunityMods(path.resolve('test-output/loader-qa/community'));
    if(!(await service.list(version,'fabric')).some(m=>m.projectId==='mOgUt4GM'))await service.install((await service.plan({version,loader:'fabric',projectId:'mOgUt4GM'})).token);

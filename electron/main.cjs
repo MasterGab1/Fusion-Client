@@ -104,13 +104,14 @@ async function setup() {
   const mods = new ModService(root);
   const community = new CommunityMods(root, { emit });
   const news = new NewsService(root);
+  const packs = new (require('./modpacks.cjs').Modpacks)(root,{emit});
   presence = new DiscordPresence({ clientId: discordApplicationId, emit: data => emit('discord', data) });
   launcher = new GameLauncher({ root, mods, community, auth, emit, log });
   const installed = app.isPackaged && require('node:fs').existsSync(path.join(path.dirname(process.execPath), 'Uninstall Fusion Launcher.exe'));
   updates = new UpdateService({ installed, version: app.getVersion(), emit: data => emit('update', data),
     getToken: require('./github-credential.cjs').githubCredential,
     createUpdater: () => require('electron-updater').autoUpdater,
-    blocked: () => launcher.busy || launcher.running || signingIn || applyingSkin || community.busy,
+    blocked: () => launcher.busy || launcher.running || signingIn || applyingSkin || community.busy || packs.busy,
   });
   register('updates-state', () => updates.snapshot());
   register('updates-check', () => updates.check());
@@ -120,7 +121,7 @@ async function setup() {
   register('versions', loadVersions);
   register('settings', patch => saveSettingsInOrder(async () => {
     const uiOnly = patch && Object.keys(patch).every(key => ['outputHeight','outputFontSize','outputAutoOpen','showNews','reducedMotion','startupAnimation','skinAutoRotate'].includes(key));
-    if (!uiOnly && (launcher.busy || launcher.running || signingIn || applyingSkin || community.busy)) throw new Error('Wait for the current account, download or game operation to finish before changing settings.');
+    if (!uiOnly && (launcher.busy || launcher.running || signingIn || applyingSkin || community.busy || packs.busy)) throw new Error('Wait for the current account, download or game operation to finish before changing settings.');
     if (!patch || typeof patch !== 'object') throw new Error('Invalid settings.');
     const next = validateSettings(settings, patch, maxMemory);
     const limits = Object.fromEntries(['backgroundFps', 'particleDistance'].filter(key => next[key] !== settings[key]).map(key => [key, next[key]]));
@@ -139,7 +140,7 @@ async function setup() {
   });
   register('cancel-sign-in', () => { auth.cancel(); });
   register('prepare-official', async version => {
-    if (signingIn || applyingSkin || community.busy) throw new Error('Wait for the current operation to finish.');
+    if (signingIn || applyingSkin || community.busy || packs.busy) throw new Error('Wait for the current operation to finish.');
     const { prepareOfficial } = require('./official-launcher.cjs');
     return prepareOfficial({ directory: path.join(app.getPath('appData'), '.minecraft'), launcher, version, settings, mods });
   });
@@ -148,7 +149,7 @@ async function setup() {
     auth.cancel(); await fs.rm(accountPath, { force: true }); emit('account', null); log('Signed out.');
   });
   register('launch', version => {
-    if (applyingSkin || signingIn || community.busy) throw new Error('Wait for the current account operation or mod download to finish before launching.');
+    if (applyingSkin || signingIn || community.busy || packs.busy) throw new Error('Wait for the current account operation or mod download to finish before launching.');
     return launcher.start(version, { ...settings, clientId: microsoftClientId });
   });
   register('mods-catalog', (version, refresh) => mods.catalog(version, refresh === true));
@@ -156,13 +157,32 @@ async function setup() {
   register('community-list', (version, loader) => community.list(version, loader));
   register('community-plan', query => community.plan(query));
   register('community-install', token => {
-    if (launcher.busy || launcher.running) throw new Error('Close Minecraft before installing mods.');
+    if (launcher.busy || launcher.running || packs.busy) throw new Error('Wait for Minecraft or the pack installation to finish.');
     return community.install(token);
   });
   register('community-remove', (version, loader, id) => {
     if (launcher.busy || launcher.running) throw new Error('Close Minecraft before removing mods.');
     return community.remove(version, loader, id);
   });
+  register('packs-search', query => packs.search(query));
+  register('packs-list', () => packs.list());
+  register('packs-plan', query => packs.plan(query));
+  register('packs-import', async () => {
+    if (packs.busy || launcher.busy || launcher.running) throw new Error('Wait for the current operation to finish.');
+    const result=await dialog.showOpenDialog(window,{title:'Import modpack',properties:['openFile'],filters:[{name:'Modrinth modpack',extensions:['mrpack']}]});
+    if(result.canceled)return null;const file=result.filePaths[0];if((await fs.stat(file)).size>64*1024*1024)throw new Error('Choose a pack archive smaller than 64 MB.');
+    return packs.preview(await fs.readFile(file));
+  });
+  register('packs-install', token => {
+    if (launcher.busy || launcher.running || community.busy) throw new Error('Wait for Minecraft or the mod installation to finish.');
+    return packs.install(token);
+  });
+  register('packs-launch', async id => {
+    if (signingIn || applyingSkin || community.busy || packs.busy) throw new Error('Wait for the current operation to finish.');
+    const pack=await packs.read(id);
+    return launcher.start(pack.version,{...settings,launchMode:pack.loader,clientId:microsoftClientId},pack);
+  });
+  register('packs-folder', async id => {const pack=await packs.read(id);const error=await shell.openPath(pack.gamePath);if(error)throw new Error(error);});
   register('news', refresh => news.get(refresh === true));
   register('article', async value => {
     const url = articleUrl(value);
@@ -267,7 +287,7 @@ async function setup() {
 function createWindow() {
   window = new BrowserWindow({ width: 1120, height: 730, minWidth: 980, minHeight: 660, frame: false, backgroundColor: '#111214', show: true,
     icon: path.join(__dirname, `../dist/assets/branding/${settings.accent}.png`),
-    webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
+    webPreferences: { additionalArguments: [`--fusion-accent=${settings.accent}`, `--fusion-motion=${settings.reducedMotion ? 'reduced' : 'full'}`], preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
   });
   let closing = false;
   window.on('close', event => {
