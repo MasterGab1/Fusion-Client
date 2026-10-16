@@ -14,6 +14,8 @@ import Updates from './Updates.jsx';
 import PlayPage from './Play.jsx';
 import News, { useNews } from './News.jsx';
 import './refresh.css';
+import './polish.css';
+import Output from './Output.jsx';
 
 const api = window.fusion;
 async function call(promise) {
@@ -50,6 +52,7 @@ function App() {
   const [draft, setDraft] = useState(null), [saving, setSaving] = useState(false), [saved, setSaved] = useState(true);
   const [dialog, setDialog] = useState(null), [signingIn, setSigningIn] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [booting, setBooting] = useState(true), [official, setOfficial] = useState(null), [preparingOfficial, setPreparingOfficial] = useState(false);
   const [error, setError] = useState(''), [logs, setLogs] = useState([]), [showLogs, setShowLogs] = useState(false);
   const [launch, setLaunch] = useState({ busy: false, running: false, label: '', progress: null });
   const [importing, setImporting] = useState(false), [selecting, setSelecting] = useState(false);
@@ -57,6 +60,13 @@ function App() {
   const { news, loading: newsLoading, refresh: refreshNews } = useNews();
   const logEnd = useRef();
   const draftRef = useRef(null), saveRevision = useRef(0), settingsQueue = useRef(Promise.resolve());
+  useEffect(() => { if(!state) return; const timer=setTimeout(()=>setBooting(false),state.settings.startupAnimation && !state.settings.reducedMotion ? 500 : 0);return ()=>clearTimeout(timer); },[!!state]);
+  async function prepareOfficial() {
+    setPreparingOfficial(true); setAuthError('');
+    try { setOfficial(await call(api.prepareOfficial(selected))); }
+    catch(e) { setAuthError(e.message); }
+    finally { setPreparingOfficial(false); setLaunch(old=>({...old,busy:false})); }
+  }
   function editSettings(updater) {
     const previous = draftRef.current || draft;
     const next = typeof updater === 'function' ? updater(previous) : updater;
@@ -94,7 +104,7 @@ function App() {
       if (type === 'account') setState(old => ({ ...old, profile: data }));
       if (type === 'discord') setState(old => old ? ({ ...old, discord: data }) : old);
       if (type === 'launch-status') setLaunch(data);
-      if (type === 'log') setLogs(old => [...old, data].slice(-400));
+      if (type === 'log') { setLogs(old => [...old, data].slice(-400)); if(data.level === 'error' && draftRef.current?.outputAutoOpen)setShowLogs(true); }
     });
     call(api.getUpdates()).then(setUpdate).catch(e => setError(e.message));
     call(api.getState()).then(data => { setState(data); setDraft(data.settings); draftRef.current = data.settings; setSelected(data.settings.selectedVersion); setLogs(data.logs); loadVersions(); }).catch(e => setError(e.message));
@@ -156,11 +166,11 @@ function App() {
   }
   const versionRows = openFamily?.versions || [];
   return <div className={`app-shell ${draft?.reducedMotion ? 'reduced-motion' : ''}`} data-accent={draft?.accent || 'pink'}>
-    {!state && !error && <div className="startup-screen" role="status"><Logo/><span>FUSION</span><div className="startup-line"/></div>}
+    {booting && !error && <div className="startup-screen" role="status"><div className="startup-emblem"><Logo accent={draft?.accent}/></div><span>FUSION</span><div className="startup-line"/></div>}
     <header className="titlebar"><div className="wordmark"><Logo accent={state?.settings.accent}/><span>FUSION</span></div><span className="titlebar-edition">MINECRAFT: JAVA EDITION</span><div className="titlebar-right"><button className="account-button" onClick={openAccount}><span className="account-avatar">{profile ? <UserRound size={17}/> : <Microsoft/>}</span><span><strong>{profile?.name || 'Sign in'}</strong><small>Microsoft account</small></span><ChevronDown size={13}/></button><div className="window-buttons"><button aria-label="Minimize" onClick={() => api.windowAction('minimize')}><Minus size={15}/></button><button aria-label="Maximize" onClick={() => api.windowAction('maximize')}><Square size={12}/></button><button aria-label="Close launcher" onClick={() => api.windowAction('close')}><X size={16}/></button></div></div></header>
     <nav className="sidebar" aria-label="Main navigation">{[['play', Play], ['versions', Layers], ['skins', Shirt], ['mods', Puzzle], ['news', Newspaper], ['settings', Settings2]].map(([item, Icon]) => <button key={item} className={`rail-button ${page === item ? 'active' : ''} ${item === 'settings' ? 'rail-bottom' : ''}`} aria-label={item[0].toUpperCase() + item.slice(1)} aria-current={page === item ? 'page' : undefined} onClick={() => navigate(item)}><Icon size={21}/><span className="rail-tooltip" role="tooltip">{item[0].toUpperCase() + item.slice(1)}</span></button>)}</nav>
     <main className={page === 'play' ? 'play-page' : 'content-page'}>
-      {page === 'skins' && <Suspense fallback={<div className="loading"><LoaderCircle size={18} className="spin"/>Loading skins</div>}><Skins profile={profile} busy={busy} openAccount={openAccount}/></Suspense>}
+      {page === 'skins' && <Suspense fallback={<div className="loading"><LoaderCircle size={18} className="spin"/>Loading skins</div>}><Skins settings={draft} profile={profile} busy={busy} openAccount={openAccount}/></Suspense>}
       {page === 'play' && state && <PlayPage selected={selected} families={families} activeFamily={activeFamily} artwork={artwork} settings={state.settings} profile={profile} busy={busy || signingIn} loading={loading || !activeVersion} launch={launch} launchGame={launchGame} cancelLaunch={() => action(() => call(api.cancelLaunch()))} choose={choose} selecting={selecting} navigate={navigate} changeBackground={changeBackground} resetBackground={resetBackground} customBackgrounds={state?.backgrounds || {}} importing={importing} news={news} openArticle={url => action(() => call(api.openArticle(url)))}/>}
       {page === 'play' && loadError && <div className="inline-error"><AlertCircle size={16}/><span>{loadError}</span><button onClick={loadVersions}>Retry</button></div>}
       {page === 'news' && <News news={news} accent={state?.settings.accent} loading={newsLoading} refresh={refreshNews} open={url => action(() => call(api.openArticle(url)))}/>}
@@ -169,11 +179,12 @@ function App() {
       {page === 'mods' && state && <Suspense fallback={<div className="loading">Loading mods</div>}><Mods key={selected} version={selected} settings={state.settings} busy={busy || signingIn} chooseVersion={() => navigate('versions')} onSettings={settings => { setState(old => ({ ...old, settings })); setDraft(settings); draftRef.current = settings; }}/></Suspense>}
     </main>
     <footer className="statusbar"><button className={showLogs ? 'active' : ''} onClick={() => setShowLogs(!showLogs)}><Terminal size={14}/>Output{logs.some(log => log.level === 'error') && <span className="error-dot"/>}</button><button title="Open game folder" aria-label="Open game folder" onClick={() => action(() => call(api.openFolder()))}><FolderOpen size={14}/></button><button className={['available', 'ready'].includes(update?.status) ? 'update-status has-update' : 'update-status'} onClick={() => setDialog('updates')}><RefreshCw size={12}/>{update?.status === 'ready' ? 'Restart to update' : update?.status === 'available' ? 'Update available' : update?.status === 'downloading' ? 'Downloading update' : 'Updates'}</button><span className="status-version">{state?.appVersion || '0.8.0'}</span></footer>
-    {showLogs && <section className="logs-panel"><header><h2>Output</h2><button className="quiet-button" onClick={() => setLogs([])}>Clear</button><button className="icon-button" aria-label="Close output" onClick={() => setShowLogs(false)}><X size={16}/></button></header><div className="logs-content">{logs.map((entry, i) => <div key={i} className={`log-line ${entry.level}`}><time>{new Date(entry.time).toLocaleTimeString('en-GB')}</time><span>{entry.message}</span></div>)}<div ref={logEnd}/></div></section>}
+    {showLogs && <Output logs={logs} clear={()=>setLogs([])} close={()=>setShowLogs(false)} settings={draft} save={editSettings}/>}
     {error && <div className="error-toast" role="status"><AlertCircle size={17}/><span>{error}</span><button className="icon-button" aria-label="Dismiss error" onClick={() => setError('')}><X size={15}/></button></div>}
     {dialog === 'account' && <Modal title={profile ? 'Account' : 'Microsoft sign-in'} close={closeAccount}>
       {profile ? <><div className="account-summary"><UserRound size={25}/><div><strong>{profile.name}</strong><span>Minecraft: Java Edition</span></div></div><button className="secondary full" onClick={() => openLink('account')}>Manage profile<ExternalLink size={15}/></button><button className="quiet-button full signout" disabled={busy} onClick={() => action(async () => { await call(api.signOut()); setDialog(null); })}><LogOut size={15}/>Sign out</button></> : <><div className="signin-brand"><Logo accent={state?.settings.accent}/></div><p className="dialog-copy">{signingIn ? 'Complete sign-in in your browser. Fusion will continue automatically.' : 'Sign in with the Microsoft account that owns Minecraft: Java Edition.'}</p><button className="primary full" disabled={signingIn} onClick={signIn}>{signingIn ? <LoaderCircle size={16} className="spin"/> : <Microsoft/>}{signingIn ? 'Waiting for Microsoft…' : 'Continue with Microsoft'}</button></>}
       {!profile && <button className="signin-help quiet-button full" onClick={() => openLink('signin-help')}>Having trouble signing in?</button>}
+      {!profile && <div className="official-signin"><h3>Use your Minecraft Launcher account</h3><p>Close Minecraft Launcher first. Fusion will add an installation with your selected mods. Then open Minecraft Launcher, select that installation, and play using its normal account sign-in.</p><button className="secondary full" disabled={signingIn || busy || preparingOfficial} onClick={prepareOfficial}>{preparingOfficial ? <LoaderCircle size={15} className="spin"/> : <ExternalLink size={15}/>}Prepare Fusion installation</button>{preparingOfficial && <p role="status">{launch.label}</p>}{official && <p role="status">Ready: open Minecraft Launcher → Installations → {official.name}. Enable “Modded” if it is hidden.</p>}</div>}
       {authError && <p className="auth-error" role="alert">{authError}</p>}
     </Modal>}
     {dialog === 'updates' && <Modal title="Updates" className="updates-modal" close={() => setDialog(null)}><Updates update={update} busy={busy || signingIn} perform={method => action(async () => setUpdate(await call(api[method]())))} openLink={openLink}/></Modal>}

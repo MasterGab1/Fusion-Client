@@ -12,10 +12,10 @@ public final class OverlayTests {
         BufferedImage image = painter.paint(config, 0, 0, "1.8.9", null, 2);
         check(image.getWidth() == 1600 && image.getHeight() == 1000);
         check((image.getRGB(0, 0) >>> 24) == 0);
-        check(OverlayPainter.control(260, 181, 0) == 20);
-        check(OverlayPainter.control(490, 181, 0) == 21);
-        check(OverlayPainter.control(720, 181, 0) == 22);
-        check(OverlayPainter.control(343, 358, 0) == 31);
+        check(OverlayPainter.control(730, 181, 0) == 20);
+        check(OverlayPainter.control(730, 267, 0) == 21);
+        check(OverlayPainter.control(730, 353, 0) == 22);
+        check(OverlayPainter.control(550, 273, 0) == 31);
         check(OverlayPainter.control(27, 155, 0) == 11);
         check(OverlayPainter.control(700, 467, 0) == 1);
         config.watermark = false;

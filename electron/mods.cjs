@@ -20,7 +20,7 @@ class ModService {
     const source = await fs.readFile(file, 'utf8').catch(error => { if (error.code !== 'ENOENT') throw error; return ''; });
     const values = {};
     for (const line of source.split(/\r?\n/)) {
-      const accent = /^accent=(pink|blue|violet)$/.exec(line.trim());
+      const accent = /^accent=(pink|blue|violet|orange|green)$/.exec(line.trim());
       if (accent) { values.accent = accent[1]; continue; }
       const match = /^\s*(watermark|focus|particles|backgroundFps|particleDistance)\s*=\s*(true|false|\d+)\s*$/.exec(line);
       if (!match) continue;
@@ -53,7 +53,7 @@ class ModService {
     return { version, loader, mods: PROJECTS.map(p => ({ ...p, available: !!loader, release: `Fusion ${runtime.version}`, enabled: !!loader && preferences.enabled.includes(p.id) })) };
   }
   async configure(version, enabled) {
-    if (!loaderFor(version)) throw new Error('Fusion mods are available on the eight default releases. Choose Vanilla for other subversions.');
+    if (!loaderFor(version)) throw new Error('Update Fusion to use its mods on this release.');
     if (!Array.isArray(enabled) || enabled.length > PROJECTS.length || enabled.some(id => !PROJECTS.some(p => p.id === id))) throw new Error('Invalid Fusion mod selection.');
     const file = this.profileFile(version); await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(`${file}.tmp`, JSON.stringify({ schema: 2, enabled: [...new Set(enabled)] })); await fs.rename(`${file}.tmp`, file);
@@ -61,7 +61,8 @@ class ModService {
     return this.catalog(version);
   }
   async install(version, _resourcePath, gamePath, launcher, settings = {}) {
-    if (!loaderFor(version)) throw new Error('Fusion mods support 1.8.9, 1.12.2, 1.16.5, 1.18.2, 1.19.2, 1.20.1, 1.21, and 26.1.2. Use Vanilla for other subversions.');
+    if (!loaderFor(version)) throw new Error('Update Fusion to use its mods on this release.');
+    if (['fabric', 'forge'].includes(settings.launchMode) && !runtime.loaders?.[settings.launchMode]?.includes(version)) throw new Error(`Fusion has no verified ${settings.launchMode} bindings for ${version}. Choose an available loader or update Fusion.`);
     launcher.checkCancelled(); launcher.status('Preparing Fusion mods');
     const source = await fs.readFile(path.join(this.bundledRoot, 'fusion-runtime.jar'));
     if (createHash('sha512').update(source).digest('hex') !== runtime.sha512) throw new Error('Fusion runtime integrity check failed. Reinstall the launcher.');
@@ -70,16 +71,25 @@ class ModService {
     const current = await fs.readFile(jar).catch(() => null);
     if (!current || createHash('sha512').update(current).digest('hex') !== runtime.sha512) { await fs.writeFile(`${jar}.tmp`, source); await fs.rename(`${jar}.tmp`, jar); }
     const { enabled } = await this.preferences(version);
-    const config = path.join(gamePath, 'fusion.properties'); await fs.mkdir(gamePath, { recursive: true });
+    // One per-version configuration across Fusion, Fabric and Forge. Keep the old
+    // location so existing in-game preferences migrate without losing any toggles.
+    const config = this.configFile(version); await fs.mkdir(gamePath, { recursive: true });
     const previousConfig = await this.runtimePreferences(version, config);
-    await this.writeConfig(config, { ...Object.fromEntries(PROJECTS.map(p => [p.id, enabled.includes(p.id)])), backgroundFps: previousConfig.backgroundFps ?? settings.backgroundFps ?? 30, particleDistance: previousConfig.particleDistance ?? settings.particleDistance ?? 24, accent: ['pink', 'blue', 'violet'].includes(settings.accent) ? settings.accent : 'pink' });
+    await this.writeConfig(config, { ...Object.fromEntries(PROJECTS.map(p => [p.id, enabled.includes(p.id)])), backgroundFps: previousConfig.backgroundFps ?? settings.backgroundFps ?? 30, particleDistance: previousConfig.particleDistance ?? settings.particleDistance ?? 24, accent: ['pink', 'blue', 'violet', 'orange', 'green'].includes(settings.accent) ? settings.accent : 'pink' });
     const lockFile = path.join(gamePath, 'fusion-mods.json');
     const previous = await fs.readFile(lockFile, 'utf8').then(JSON.parse).catch(() => null);
     // Retire only JARs tracked by the previous third-party preset. Keep user files.
     for (const file of previous?.files || []) if (/^[!\w.+()-]+\.jar$/.test(file.filename)) await fs.rename(path.join(gamePath, 'mods', file.filename), path.join(gamePath, 'mods', `${file.filename}.disabled`)).catch(error => { if (error.code !== 'ENOENT') throw error; });
     await fs.writeFile(`${lockFile}.tmp`, JSON.stringify({ schema: 2, loader: 'fusion', runtimeVersion: runtime.version, enabled, sha512: runtime.sha512 }, null, 2)); await fs.rename(`${lockFile}.tmp`, lockFile);
     launcher.checkCancelled();
-    return { jar, config };
+    const library = path.join(gamePath, 'fusion-library.properties');
+    const inventory = await fs.readFile(path.join(gamePath, 'mods', '.fusion-mods.json'), 'utf8').then(JSON.parse).catch(() => ({mods:[]}));
+    const names = (inventory.mods || []).map(mod => `${mod.name} · ${mod.versionName}`);
+    const tracked = new Set((inventory.mods || []).map(mod => mod.filename));
+    for (const name of await fs.readdir(path.join(gamePath, 'mods')).catch(() => [])) if (name.endsWith('.jar') && !tracked.has(name)) names.push(name.slice(0,-4));
+    const escape = value => String(value).slice(0,150).replace(/[\r\n]/g,' ').replace(/\\/g,'\\\\').replace(/[^\x20-\x7e]/g, char => '\\u'+char.charCodeAt(0).toString(16).padStart(4,'0'));
+    await fs.writeFile(library, names.slice(0,200).map((name,i)=>`${i}=${escape(name)}`).join('\n'));
+    return { jar, config, library };
   }
 }
 module.exports = { ModService, PROJECTS, loaderFor };

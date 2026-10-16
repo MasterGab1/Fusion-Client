@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('fusion', {
   openArticle: url => invoke('article', url),
   saveSettings: settings => invoke('settings', settings),
   signIn: () => invoke('sign-in'),
+  prepareOfficial: version => invoke('prepare-official', version),
   cancelSignIn: () => invoke('cancel-sign-in'),
   signOut: () => invoke('sign-out'),
   launch: version => invoke('launch', version),

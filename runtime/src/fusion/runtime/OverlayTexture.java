@@ -38,7 +38,7 @@ final class OverlayTexture {
         renderTypeFactory = renderType ? game.type("texture.renderType.class").getMethod(p.getProperty("texture.renderType.method"), resource) : null;
         filter = legacy || samplerMode ? null : dynamic.getMethod(p.getProperty("texture.filter"), boolean.class, boolean.class);
         if (legacy) {
-            Class<?> gl = Class.forName("org.lwjgl.opengl.GL11"), state = game.type("texture.state.class");
+            Class<?> gl = Hooks.type("org.lwjgl.opengl.GL11"), state = game.type("texture.state.class");
             blend = state.getMethod(p.getProperty("texture.blend.on")); blendOff = state.getMethod(p.getProperty("texture.blend.off"));
             blendFunc = state.getMethod(p.getProperty("texture.blend.func"), int.class, int.class);
             blendEnabled = gl.getMethod("glIsEnabled", int.class);
@@ -46,13 +46,13 @@ final class OverlayTexture {
             texParameter = gl.getMethod("glTexParameteri", int.class, int.class, int.class);
             shader = shaderSet = shaderTexture = null; pipeline = null;
         } else {
-            Class<?> rs = Class.forName("com.mojang.blaze3d.systems.RenderSystem");
+            Class<?> rs = Hooks.type("com.mojang.blaze3d.systems.RenderSystem");
             blend = (modern || renderType) ? null : rs.getMethod("enableBlend"); blendFunc = (modern || renderType) ? null : rs.getMethod("defaultBlendFunc");
             shader = p.containsKey("texture.shader") ? game.type("texture.shader.class").getMethod(p.getProperty("texture.shader")) : null;
             shaderSet = shader != null ? rs.getMethod("setShader", Supplier.class) : null;
             shaderTexture = shader != null ? rs.getMethod("setShaderTexture", int.class, resource) : null;
             pipeline = modern ? game.type("texture.pipeline.class").getField(p.getProperty("texture.pipeline.field")).get(null) : null;
-            blendOff = (modern || renderType) ? null : rs.getMethod("disableBlend"); blendEnabled = (modern || renderType) ? null : Class.forName("org.lwjgl.opengl.GL11").getMethod("glIsEnabled", int.class);
+            blendOff = (modern || renderType) ? null : rs.getMethod("disableBlend"); blendEnabled = (modern || renderType) ? null : Hooks.type("org.lwjgl.opengl.GL11").getMethod("glIsEnabled", int.class);
             color = texParameter = null;
         }
     }
@@ -69,7 +69,7 @@ final class OverlayTexture {
         register.invoke(manager, id, texture);
         if (filter != null) filter.invoke(texture, true, false);
         if (samplerMode) {
-            Class<?> rs = Class.forName("com.mojang.blaze3d.systems.RenderSystem"), mode = Class.forName("com.mojang.blaze3d.textures.FilterMode");
+            Class<?> rs = Hooks.type("com.mojang.blaze3d.systems.RenderSystem"), mode = Hooks.type("com.mojang.blaze3d.textures.FilterMode");
             Object cache = rs.getMethod("getSamplerCache").invoke(null);
             Object sampler = cache.getClass().getMethod(p.getProperty("texture.sampler.method"), mode).invoke(cache, mode.getField("LINEAR").get(null));
             MinecraftAdapter.field(texture.getClass(), p.getProperty("texture.sampler.field")).set(texture, sampler);

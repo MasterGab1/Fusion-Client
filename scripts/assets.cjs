@@ -19,7 +19,7 @@ const sharp = require('sharp');
   await fs.mkdir('public/assets/licenses', { recursive: true });
   await Promise.all(['skinview3d', 'skinview-utils', 'three'].map(name => fs.copyFile(`node_modules/${name}/LICENSE`, `public/assets/licenses/${name}.txt`)));
   await fs.mkdir('public/assets/branding', { recursive: true });
-  for (const accent of ['pink', 'violet', 'blue']) {
+  for (const accent of ['pink', 'violet', 'blue', 'orange', 'green']) {
     // Normalize transparent padding for app-sized assets; retain the supplied artwork.
     await sharp(`assets/branding/${accent}.png`).trim().resize(256, 256, { fit: 'contain', background: '#00000000' }).png().toFile(`public/assets/branding/${accent}.png`);
   }

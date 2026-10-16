@@ -16,7 +16,7 @@ public final class ClientMenu {
     public static void legacyEvent(boolean available) {
         if (!available) return;
         try {
-            if (eventKey == null) { Class<?> keyboard = Class.forName("org.lwjgl.input.Keyboard"); eventKey = keyboard.getMethod("getEventKey"); eventState = keyboard.getMethod("getEventKeyState"); }
+            if (eventKey == null) { Class<?> keyboard = Hooks.type("org.lwjgl.input.Keyboard"); eventKey = keyboard.getMethod("getEventKey"); eventState = keyboard.getMethod("getEventKeyState"); }
             keyEvent((Integer)eventKey.invoke(null), (Boolean)eventState.invoke(null) ? 1 : 0);
         } catch (Exception ignored) { }
     }
@@ -51,7 +51,7 @@ public final class ClientMenu {
             int[] a = layout(screen); int hover = control(a, mx, my);
             if (painter == null) painter = new OverlayPainter();
             if (texture == null) texture = new OverlayTexture(gui.game, profile);
-            String state = category + ":" + hover + ":" + config.watermark + ":" + config.focus + ":" + config.particles + ":" + config.backgroundFps + ":" + config.particleDistance + ":" + config.accent + ":" + saveError;
+            String state = config.modPage + ":" + category + ":" + hover + ":" + config.watermark + ":" + config.focus + ":" + config.particles + ":" + config.backgroundFps + ":" + config.particleDistance + ":" + config.accent + ":" + saveError;
             if (!state.equals(renderedState)) {
                 texture.upload(painter.paint(config, category, hover, profile.getProperty("version"), saveError, 2)); renderedState = state;
             }
@@ -64,7 +64,8 @@ public final class ClientMenu {
         try {
             int id = control(layout(screen), mx, my);
             if (id == 1) gui.close();
-            else if (id >= 10 && id <= 12) category = id - 10;
+            else if (id >= 10 && id <= 13) category = id - 10;
+            else if (id == 50 || id == 51) config.modPage = Math.max(0,Math.min(Math.max(0,(config.mods.length-1)/5),config.modPage+(id==50?-1:1)));
             else if (id >= 20 && id <= 22) toggle(id - 20);
             else if (id == 31 || id == 41) { config.backgroundFps = Math.max(5, Math.min(60, config.backgroundFps + (id == 31 ? -5 : 5))); save(); }
             else if (id == 32 || id == 42) { config.particleDistance = Math.max(8, Math.min(64, config.particleDistance + (id == 32 ? -4 : 4))); save(); }

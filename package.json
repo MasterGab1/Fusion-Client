@@ -1,7 +1,7 @@
 {
   "name": "fusion-launcher",
   "productName": "Fusion Launcher",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Microsoft-account-only Minecraft Java desktop launcher",
   "author": "Fusion",
   "private": true,
@@ -9,10 +9,10 @@
   "scripts": {
     "dev": "node scripts/dev.cjs",
     "start": "electron .",
-    "build": "node scripts/build-runtime.cjs && node scripts/assets.cjs && vite build",
+    "build": "node scripts/build-runtime.cjs && node scripts/assets.cjs && vite build && node scripts/build-uninstaller.cjs",
     "dist": "npm run build && electron-builder --win nsis --x64 --publish never && node scripts/build-installer.cjs && npm run release:prepare",
     "test": "node --test tests/*.test.cjs",
-    "test:ui": "node scripts/smoke-persistence.cjs && node scripts/smoke-v010.cjs",
+    "test:ui": "node scripts/smoke-persistence.cjs && node scripts/smoke-v011.cjs",
     "dist:portable": "npm run build && electron-builder --win portable --x64",
     "build:mods": "node scripts/build-runtime.cjs",
     "test:mods": "node scripts/test-runtime.cjs",
@@ -78,7 +78,8 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "artifactName": "Fusion-Setup-${version}.exe"
+      "artifactName": "Fusion-Setup-${version}.exe",
+      "include": "installer/custom.nsh"
     },
     "publish": [
       {
@@ -88,6 +89,12 @@
         "releaseType": "draft",
         "channel": "latest",
         "private": true
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "build/Fusion-Uninstall.exe",
+        "to": "Fusion-Uninstall.exe"
       }
     ]
   },

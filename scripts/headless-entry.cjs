@@ -14,4 +14,4 @@ Module._load = function(request, parent, isMain) {
   if (request === 'electron') return { ...electron, BrowserWindow: HiddenWindow };
   return load.call(this, request, parent, isMain);
 };
-require('../electron/main.cjs');
+require(process.env.FUSION_QA_ASAR ? require('node:path').join(process.env.FUSION_QA_ASAR, 'electron/main.cjs') : '../electron/main.cjs');

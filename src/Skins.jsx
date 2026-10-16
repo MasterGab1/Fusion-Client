@@ -9,10 +9,10 @@ async function invoke(promise) {
   if (!result?.ok) throw new Error(result?.error || 'The skin operation failed.');
   return result.value;
 }
-function Preview({ skin, model }) {
+function Preview({ skin, model, autoRotate }) {
   const container = useRef(), canvas = useRef(), viewer = useRef(), loadQueue = useRef(Promise.resolve());
   const [error, setError] = useState(''), [ready, setReady] = useState(false);
-  const [rotate, setRotate] = useState(false), [walk, setWalk] = useState(false), [layers, setLayers] = useState(true);
+  const [rotate, setRotate] = useState(!!autoRotate), [walk, setWalk] = useState(false), [layers, setLayers] = useState(true);
   useEffect(() => {
     let scene;
     try {
@@ -75,9 +75,10 @@ function Preview({ skin, model }) {
     </div>
   </section>;
 }
-export default function Skins({ profile, busy: gameBusy, openAccount }) {
+export default function Skins({ profile, busy: gameBusy, openAccount, settings }) {
   const [library, setLibrary] = useState(null), [selected, setSelected] = useState('default'), [model, setModel] = useState('classic');
   const [username, setUsername] = useState(''), [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [filter, setFilter] = useState('');
   const skin = library?.skins.find(s => s.id === selected);
   function update(data) { if (data) { setLibrary(data); setSelected(data.selected); setModel(data.model); } }
   async function run(label, fn) {
@@ -95,7 +96,7 @@ export default function Skins({ profile, busy: gameBusy, openAccount }) {
   return <>
     <header className="page-heading skins-heading"><div><h1>Skins</h1><span>Java Edition</span></div><button className="secondary" disabled={!!pending} onClick={() => run('Importing', async () => update(await invoke(api.importSkin())))}><Upload size={15}/>Import PNG</button></header>
     <div className="skins-layout">
-      <Preview skin={skin} model={model}/>
+      <Preview skin={skin} model={model} autoRotate={settings?.skinAutoRotate && !settings?.reducedMotion}/>
       <div className="skin-inspector">
         <section className="skin-details">
           <header><div><span className="field-label">Selected skin</span><h2>{skin?.name || 'Loading…'}</h2><p>{skin?.source || 'Local library'}{skin && <> <span>·</span> {skin.width} × {skin.height}</>}</p></div><button className="icon-button" title="Load my account skin" aria-label="Load my account skin" disabled={!!pending || !profile} onClick={() => run('Loading account skin', async () => update(await invoke(api.currentSkin())))}><UserRound size={18}/></button></header>
@@ -103,7 +104,7 @@ export default function Skins({ profile, busy: gameBusy, openAccount }) {
           <div className="skin-actions"><button className="primary" disabled={!!pending || !skin || gameBusy} onClick={() => { if (!profile) return openAccount(); run('Applying', async () => { const result = await invoke(api.applySkin(selected, model)); setNotice(`Skin applied to ${result.name}. Relaunch Minecraft to see it.`); }); }}>{pending === 'Applying' ? <LoaderCircle size={15} className="spin"/> : <Check size={15}/>} {!profile ? 'Sign in to apply' : 'Apply skin'}</button><button className="secondary" disabled={!!pending || !skin} onClick={() => run('Saving', async () => { if (await invoke(api.exportSkin(selected))) setNotice('PNG downloaded.'); })}><Download size={15}/>Download PNG</button></div>
         </section>
         <section className="skin-downloader"><h2>Download a player's skin</h2><form onSubmit={lookup}><div><Search size={15}/><input aria-label="Minecraft username" placeholder="Minecraft username" value={username} onChange={e => setUsername(e.target.value)} maxLength={16} spellCheck="false" autoComplete="off"/></div><button className="secondary" disabled={!!pending || !username.trim()} type="submit">{pending === 'Looking up' ? <LoaderCircle size={15} className="spin"/> : 'Load skin'}</button></form></section>
-        <section className="skin-library"><header><h2>Library</h2>{skin && selected !== 'default' && <button className="icon-button" aria-label="Remove saved skin" title="Remove saved skin" disabled={!!pending} onClick={() => run('Removing', async () => { update(await invoke(api.removeSkin(selected))); setNotice('Removed from your library.'); })}><Trash2 size={14}/></button>}<span>{library?.skins.length || 0}</span></header><div className="skin-library-list">{library?.skins.map(item => <button key={item.id} aria-label={`Preview ${item.name}`} aria-pressed={selected === item.id} disabled={!!pending} onClick={() => select(item.id, item.model)}><span className="skin-face" style={{ backgroundImage: `url(${item.dataUrl})`, backgroundSize: `800% ${item.height === 32 ? 400 : 800}%`, backgroundPosition: `14.2857% ${item.height === 32 ? 33.3333 : 14.2857}%` }}/><span><strong>{item.name}</strong><small>{item.model === 'slim' ? 'Slim' : 'Classic'}</small></span>{selected === item.id && <Check size={14}/>}</button>)}</div></section>
+        <section className="skin-library"><header><h2>Library</h2>{skin && selected !== 'default' && <button className="icon-button" aria-label="Remove saved skin" title="Remove saved skin" disabled={!!pending} onClick={() => run('Removing', async () => { update(await invoke(api.removeSkin(selected))); setNotice('Removed from your library.'); })}><Trash2 size={14}/></button>}<span>{library?.skins.length || 0}</span></header><input className="skin-library-search" aria-label="Filter saved skins" placeholder="Find a saved skin…" value={filter} onChange={e=>setFilter(e.target.value)}/><div className="skin-library-list">{library?.skins.filter(item=>item.name.toLowerCase().includes(filter.toLowerCase())).map(item => <button key={item.id} aria-label={`Preview ${item.name}`} aria-pressed={selected === item.id} disabled={!!pending} onClick={() => select(item.id, item.model)}><span className="skin-face" style={{ backgroundImage: `url(${item.dataUrl})`, backgroundSize: `800% ${item.height === 32 ? 400 : 800}%`, backgroundPosition: `14.2857% ${item.height === 32 ? 33.3333 : 14.2857}%` }}/><span><strong>{item.name}</strong><small>{item.model === 'slim' ? 'Slim' : 'Classic'}</small></span>{selected === item.id && <Check size={14}/>}</button>)}</div></section>
         {(error || notice || pending) && <div className={`skin-feedback ${error ? 'is-error' : ''}`} role="status">{error ? <AlertCircle size={15}/> : pending ? <LoaderCircle size={15} className="spin"/> : <Check size={15}/>}<span>{error || (pending ? `${pending}…` : notice)}</span>{error && !library && <button onClick={() => run('Loading', async () => update(await invoke(api.getSkins())))}>Retry</button>}</div>}
       </div>
     </div>

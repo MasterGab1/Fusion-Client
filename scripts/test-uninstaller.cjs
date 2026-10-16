@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),{execFileSync,spawnSync}=require('node:child_process');
+const root=path.resolve('test-output/uninstaller-qa');fs.mkdirSync(path.join(root,'resources'),{recursive:true});fs.writeFileSync(path.join(root,'resources/app.asar'),'fixture');
+const code='using System;using System.IO;public class Mock {public static int Main(string[] args){int i=Array.FindIndex(args,x=>x.StartsWith("_?="));string root=String.Join(" ",args,i,args.Length-i).Substring(3);File.WriteAllText(Path.Combine(root,"arguments.txt"),String.Join("\\n",args));return File.Exists(Path.Combine(root,"fail"))?7:0;}}';
+fs.writeFileSync(path.join(root,'Mock.cs'),code);
+execFileSync(path.join(process.env.WINDIR,'Microsoft.NET/Framework64/v4.0.30319/csc.exe'),['/nologo','/target:winexe','/out:'+path.join(root,'Uninstall Fusion Launcher.exe'),path.join(root,'Mock.cs')],{windowsHide:true});
+const exe=path.resolve('build/Fusion-Uninstall.exe');
+let result=spawnSync(exe,['/S','/currentuser','--updated','--keep-shortcuts','_?='+root],{windowsHide:true});if(result.status!==0)throw new Error('Silent uninstall forwarding failed');
+const args=fs.readFileSync(path.join(root,'arguments.txt'),'utf8');for(const flag of ['/S','/KEEP_APP_DATA','--updated','--keep-shortcuts',root])if(!args.replaceAll("\n"," ").includes(flag))throw new Error('Missing '+flag);
+fs.writeFileSync(path.join(root,'fail'),'');result=spawnSync(exe,['/S','--target',root],{windowsHide:true});fs.unlinkSync(path.join(root,'fail'));if(result.status!==7)throw new Error('Uninstall failure was hidden');
+execFileSync(exe,['--preview',path.join(root,'uninstaller.png')],{windowsHide:true});console.log('PASS: custom uninstaller preserves data flags, forwards spaced paths, reports failure, and renders without uninstalling any app.');

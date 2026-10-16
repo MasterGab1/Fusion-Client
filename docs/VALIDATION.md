@@ -1,3 +1,12 @@
+## 0.11 launcher, mod interoperability and uninstall — 16 October 2026
+
+- 51 Node tests pass, including combined dependency plans and official-launcher profile preservation/argument quoting.
+- Hidden Electron checks pass for selection across searches, real four-mod batch installation, dependency deletion guards, theme logos, skins library filter, output size persistence and minimum-window layout.
+- Real Fabric probes cover 1.16.5, 1.20.1 with Mod Menu/Fabric API, 1.21.11 and 26.1.2; legacy Forge probes cover 1.8.9 and 1.12.2. Probes exit before gameplay and check shared runtime classes, hook installation and generated screen linking. Latest 1.20.1/1.8.9 probes also paint the overlay through the real loader.
+- Runtime unit checks cover FPS, particles, bounds, menu rendering and hit regions. The 49 existing vanilla profiles remain unchanged; 36 Fabric and 39 Forge profiles are bundled.
+- Custom uninstaller tests use a mock engine to verify silent update flags, paths with spaces, preserved data and failure-code forwarding. Its WPF preview was visually inspected. No installed launcher was removed.
+- Launcher screenshots, in-game rendered menu and uninstaller preview were inspected. No game focus was taken; real-account login, official-launcher gameplay and modern Forge gameplay remain unverified.
+
 # Build validation
 
 ## 0.10.0 installer, persistence and runtime coverage — 15 October 2026

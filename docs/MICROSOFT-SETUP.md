@@ -2,6 +2,17 @@
 
 Fusion is a Windows desktop launcher. It does not ship a borrowed Microsoft client ID. You need a Microsoft application registration belonging to your project, and that application must be permitted to access Minecraft Java services.
 
+## Test with your official Minecraft Launcher account
+
+If Fusion's direct sign-in is rejected, you can prepare a Fusion installation for the official Minecraft Launcher:
+
+1. Install and sign into the official Minecraft Launcher, then close it so its installation file is not being edited.
+2. In Fusion, choose the Minecraft version and loader, and install any community mods you want.
+3. Open **Sign in → Prepare Fusion installation**. Wait for preparation to finish.
+4. Open Minecraft Launcher → **Installations**, enable the **Modded** filter if necessary, and play the generated **Fusion** installation.
+
+Minecraft Launcher handles account authentication. Fusion does not read its account database or copy its tokens. This does not sign the Fusion UI into your account or enable account skin uploads there. Existing installations and their selected profile are preserved, with a backup before writing. Fusion game folders remain separate from your ordinary Minecraft worlds. This path has automated profile/argument checks but still needs a real-account gameplay check.
+
 ## Fix the reported redirect error
 
 You already supplied application ID **7d62351c-268c-4fbe-95d5-89611193ab12**. You do not need a client secret or a new key. Open **Entra → App registrations → your Fusion application → Authentication**, add the **Mobile and desktop applications** platform and register **http://localhost**, then save. If the platform already exists, edit its redirect URIs. The temporary port is handled by Microsoft’s localhost matching rule. Fusion uses the root path `/`, not `/callback`.

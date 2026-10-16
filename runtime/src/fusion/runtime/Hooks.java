@@ -10,7 +10,18 @@ public final class Hooks {
     private static Object hudContext;
     private static final BackgroundFpsMod focus = new BackgroundFpsMod();
     private static final ParticleDistanceMod particles = new ParticleDistanceMod();
-    static void initialize(Properties p, RuntimeConfig c) { profile = p; config = c; }
+    private static volatile ClassLoader gameLoader;
+    public static void initialize(Properties p, RuntimeConfig c) { profile = p; config = c; }
+    public static synchronized void bindLoader(ClassLoader loader) {
+        if (loader == null || loader == gameLoader) return;
+        try {
+            if (loader.getClass().getName().equals("net.minecraft.launchwrapper.LaunchClassLoader")) {
+                loader.getClass().getMethod("addClassLoaderExclusion", String.class).invoke(loader, "fusion.");
+            }
+            gameLoader = loader;
+        } catch (Exception e) { throw new IllegalStateException("Fusion could not attach to the mod loader", e); }
+    }
+    static Class<?> type(String name) throws ClassNotFoundException { return Class.forName(name, true, gameLoader == null ? Hooks.class.getClassLoader() : gameLoader); }
     private static MinecraftAdapter game() throws Exception {
         if (adapter == null && !failed) adapter = new MinecraftAdapter(profile);
         return adapter;

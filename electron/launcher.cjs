@@ -152,7 +152,7 @@ class GameLauncher {
         const { prepareLoader } = require('./loaders.cjs');
         version = await prepareLoader({ version: versionId, loader: settings.launchMode, resourcePath, javaPath, settings, launcher: this });
       }
-      if (performance) {
+      if (performance || community) {
         if (!this.mods) throw new Error('The mod manager is unavailable.');
         fusionRuntime = await this.mods.install(versionId, resourcePath, gamePath, this, settings);
       }
@@ -177,7 +177,9 @@ class GameLauncher {
         // Older core versions leave these modern account placeholders unresolved.
         spawn: (command, args, options) => {
           const gameArgs = args.map(arg => String(arg).replaceAll('${auth_xuid}', session.xuid).replaceAll('${clientid}', session.clientId));
-          if (fusionRuntime) gameArgs.unshift(`-javaagent:${fusionRuntime.jar}=${versionId}`, `-Dfusion.config=${fusionRuntime.config}`);
+          if (fusionRuntime) {
+            gameArgs.unshift(`-javaagent:${fusionRuntime.jar}=${versionId}`, `-Dfusion.config=${fusionRuntime.config}`, `-Dfusion.library=${fusionRuntime.library}`, `-Dfusion.loader=${community ? settings.launchMode : 'vanilla'}`);
+          }
           return spawn(command, gameArgs, options);
         },
       });

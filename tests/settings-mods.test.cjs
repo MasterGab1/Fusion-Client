@@ -32,7 +32,7 @@ test('bundled modules work without network, persist toggles and retire only mana
     await fs.access(path.join(game, 'mods/old-managed.jar.disabled')); await fs.access(path.join(game, 'mods/user-mod.jar'));
     assert.equal((await new ModService(root).catalog('1.8.9')).mods.find(m => m.id === 'particles').enabled, false);
     await assert.rejects(mods.configure('1.8.9', ['sodium']), /Invalid Fusion/);
-    await assert.rejects(mods.install('1.12.99', '', game, {}), /Use Vanilla/);
+    await assert.rejects(mods.install('1.12.99', '', game, {}), /Update Fusion/);
   } finally { global.fetch = original; await fs.rm(root, { recursive: true, force: true }); }
 });
 test('tampered bundled runtime fails before installing or launching it', async () => {

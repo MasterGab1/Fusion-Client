@@ -19,7 +19,7 @@ final class MinecraftAdapter {
         hidden = field(options.getType(), p.getProperty("hide.field"));
         fpsField = p.containsKey("mc.fps.field") ? field(mc, p.getProperty("mc.fps.field")) : null;
         fpsMethod = fpsField == null ? method(mc, p.getProperty("mc.fps.method")) : null;
-        active = p.getProperty("mc.focus").equals("lwjgl2") ? method(Class.forName("org.lwjgl.opengl.Display"), "isActive") : method(mc, p.getProperty("mc.focus"));
+        active = p.getProperty("mc.focus").equals("lwjgl2") ? method(Hooks.type("org.lwjgl.opengl.Display"), "isActive") : method(mc, p.getProperty("mc.focus"));
         drawMode = p.getProperty("draw.mode");
         Class<?> drawClass = type("draw.class");
         Method found = null;
@@ -39,7 +39,7 @@ final class MinecraftAdapter {
             else entityCoordinate[i] = method(entity, p.getProperty("entity." + axes[i]));
         }
     }
-    Class<?> type(String key) throws ClassNotFoundException { return Class.forName(p.getProperty(key).replace('/', '.')); }
+    Class<?> type(String key) throws ClassNotFoundException { return Hooks.type(p.getProperty(key).replace('/', '.')); }
     static Field field(Class<?> type, String name) throws NoSuchFieldException {
         for (Class<?> c = type; c != null; c = c.getSuperclass()) try { Field f = c.getDeclaredField(name); f.setAccessible(true); return f; } catch (NoSuchFieldException ignored) { }
         throw new NoSuchFieldException(type.getName() + "." + name);

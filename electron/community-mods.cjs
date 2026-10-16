@@ -20,13 +20,13 @@ function safeDownload(value) {
   return url.href;
 }
 function id(value) { if (typeof value !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(value)) throw new Error('Invalid mod identifier.'); return value; }
-async function jsonRequest(route, fetcher = fetch) {
-  const response = await fetcher(`${API}${route}`, { headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(25000) });
+async function jsonRequest(route, fetcher = fetch, timeout = 25000) {
+  const response = await fetcher(`${API}${route}`, { headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(timeout) });
   if (!response.ok) throw new Error(response.status === 429 ? 'Modrinth is busy. Wait a moment and retry.' : `Modrinth request failed (${response.status}). Please retry.`);
   return response.json();
 }
 class CommunityMods {
-  constructor(root, { fetcher = fetch, emit = () => {} } = {}) { Object.assign(this, { root, fetcher, emit }); this.plans = new Map(); this.busy = false; }
+  constructor(root, { fetcher = fetch, emit = () => {} } = {}) { Object.assign(this, { root, fetcher, emit }); this.plans = new Map(); this.busy = false; this.icons = new Map(); }
   directory(version, loader) { return path.join(this.root, 'instances', context(version, loader), 'mods'); }
   async read(version, loader) {
     const directory = this.directory(version, loader);
@@ -37,7 +37,16 @@ class CommunityMods {
   }
   async list(version, loader) {
     if (this.busy) throw new Error('Wait for the mod installation to finish.');
-    return (await this.read(version, loader)).mods;
+    const mods = (await this.read(version, loader)).mods;
+    const missing = mods.filter(m => !m.icon && !this.icons.has(m.projectId)).slice(0, 100).map(m => id(m.projectId));
+    if (missing.length) {
+      try {
+        const projects = await jsonRequest(`/projects?${new URLSearchParams({ids:JSON.stringify(missing)})}`,this.fetcher,4000);
+        for(const project of projects) this.icons.set(project.id,project.icon_url?.startsWith('https://cdn.modrinth.com/')?project.icon_url:null);
+      } catch {} // Artwork failure must not block the installed mod inventory.
+      for(const projectId of missing) if(!this.icons.has(projectId))this.icons.set(projectId,null);
+    }
+    return mods.map(mod => ({...mod,icon:mod.icon||this.icons.get(mod.projectId)||null}));
   }
   async search({ version, loader, query = '', offset = 0 }) {
     context(version, loader);
@@ -46,12 +55,14 @@ class CommunityMods {
     const data = await jsonRequest(`/search?${new URLSearchParams({ query, facets: JSON.stringify(facets), limit: '20', offset: String(offset), index: 'downloads' })}`, this.fetcher);
     return { total: data.total_hits, hits: data.hits.map(p => ({ id: p.project_id, name: p.title, description: p.description, author: p.author, icon: p.icon_url?.startsWith('https://cdn.modrinth.com/') ? p.icon_url : null, downloads: p.downloads, slug: p.slug })) };
   }
-  async plan({ version, loader, projectId }) {
+  async plan({ version, loader, projectId, projectIds }) {
     if (this.busy) throw new Error('Wait for the mod installation to finish.');
-    context(version, loader); id(projectId);
-    const rootProjectId = projectId;
+    context(version, loader);
+    const roots = projectIds === undefined ? [projectId] : projectIds;
+    if (!Array.isArray(roots) || !roots.length || roots.length > 40) throw new Error('Select between 1 and 40 mods.');
+    const rootIds = new Set(roots.map(id));
     const lock = await this.read(version, loader), installed = new Map(lock.mods.map(m => [keyOf(m), m]));
-    if (installed.has(projectId)) throw new Error('This mod is already installed.');
+    if ([...rootIds].some(id => installed.has(id))) throw new Error('A selected mod is already installed. Refresh your library.');
     const chosen = new Map(), projectCache = new Map();
     const project = async projectId => {
       id(projectId);
@@ -75,7 +86,7 @@ class CommunityMods {
       if (!v || !v.game_versions.includes(version) || !v.loaders.includes(loader)) throw new Error(`No compatible ${loader} release of ${p.title} exists for ${version}.`);
       const file = v.files.find(f => f.primary) || v.files[0];
       if (!file || !/^[a-f0-9]{128}$/i.test(file.hashes?.sha512 || '') || !Number.isSafeInteger(file.size) || file.size < 1 || file.size > 512 * 1024 * 1024) throw new Error(`${p.title} has no verifiable JAR download.`);
-      const entry = { projectId, versionId: v.id, name: p.title, author: p.slug, versionName: v.version_number, filename: safeFile(file.filename), url: safeDownload(file.url), sha512: file.hashes.sha512.toLowerCase(), size: file.size, required: [], incompatible: [], root: projectId === rootProjectId };
+      const entry = { projectId, versionId: v.id, name: p.title, author: p.slug, icon: p.icon_url?.startsWith('https://cdn.modrinth.com/') ? p.icon_url : null, versionName: v.version_number, filename: safeFile(file.filename), url: safeDownload(file.url), sha512: file.hashes.sha512.toLowerCase(), size: file.size, required: [], incompatible: [], root: rootIds.has(projectId) };
       chosen.set(projectId, entry);
       for (const dep of v.dependencies || []) {
         if (dep.dependency_type === 'required') {
@@ -90,7 +101,7 @@ class CommunityMods {
       }
       return entry;
     };
-    await visit(projectId);
+    for (const rootId of rootIds) await visit(rootId);
     const all = [...installed.values(), ...chosen.values()];
     for (const entry of all) {
       for (const conflict of entry.incompatible || []) if (all.some(m => m.projectId === conflict.projectId && (!conflict.versionId || conflict.versionId === m.versionId))) throw new Error(`${entry.name} conflicts with another selected or installed mod.`);

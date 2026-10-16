@@ -119,7 +119,8 @@ async function setup() {
   register('state', async () => ({ settings, profile: (await vault.read())?.profile || null, discord: presence.snapshot(), maxMemory, logs, appVersion: app.getVersion(), root, families: FAMILIES, backgrounds: await backgrounds() }));
   register('versions', loadVersions);
   register('settings', patch => saveSettingsInOrder(async () => {
-    if (launcher.busy || launcher.running || signingIn || applyingSkin || community.busy) throw new Error('Wait for the current account, download or game operation to finish before changing settings.');
+    const uiOnly = patch && Object.keys(patch).every(key => ['outputHeight','outputFontSize','outputAutoOpen','showNews','reducedMotion','startupAnimation','skinAutoRotate'].includes(key));
+    if (!uiOnly && (launcher.busy || launcher.running || signingIn || applyingSkin || community.busy)) throw new Error('Wait for the current account, download or game operation to finish before changing settings.');
     if (!patch || typeof patch !== 'object') throw new Error('Invalid settings.');
     const next = validateSettings(settings, patch, maxMemory);
     const limits = Object.fromEntries(['backgroundFps', 'particleDistance'].filter(key => next[key] !== settings[key]).map(key => [key, next[key]]));
@@ -137,6 +138,11 @@ async function setup() {
     finally { signingIn = false; }
   });
   register('cancel-sign-in', () => { auth.cancel(); });
+  register('prepare-official', async version => {
+    if (signingIn || applyingSkin || community.busy) throw new Error('Wait for the current operation to finish.');
+    const { prepareOfficial } = require('./official-launcher.cjs');
+    return prepareOfficial({ directory: path.join(app.getPath('appData'), '.minecraft'), launcher, version, settings, mods });
+  });
   register('sign-out', async () => {
     if (launcher.busy || launcher.running || applyingSkin) throw new Error('Wait for the game or skin change to finish before signing out.');
     auth.cancel(); await fs.rm(accountPath, { force: true }); emit('account', null); log('Signed out.');

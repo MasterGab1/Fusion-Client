@@ -18,7 +18,7 @@ Launch from the artwork, jump between favorite releases, or search the version p
 | **Mods** | Fusion HUD, Focus and Particles; community mod discovery and automatic required dependencies |
 | **Skins** | 3D preview, classic/slim models, PNG library, username downloads, account uploads |
 | **News** | Official Minecraft stories with banners and cached reading |
-| **Preferences** | Autosave, compact categories, memory/Java controls, three animated accent themes |
+| **Preferences** | Autosave, compact categories, memory/Java controls, five accent themes, motion controls and resizable output |
 | **Discord** | Optional Rich Presence for the launcher and your running Minecraft version |
 
 <div align="center">
@@ -27,9 +27,15 @@ Launch from the artwork, jump between favorite releases, or search the version p
   <img src="public/assets/branding/violet.png" width="70" alt="Violet" />
   &nbsp;&nbsp;
   <img src="public/assets/branding/blue.png" width="70" alt="Blue" />
+  &nbsp;&nbsp;
+  <img src="public/assets/branding/orange.png" width="70" alt="Ember" />
+  &nbsp;&nbsp;
+  <img src="public/assets/branding/green.png" width="70" alt="Lime" />
 </div>
 
 ## Fusion in game
+
+![Fusion in-game menu](docs/images/menu.png)
 
 Press **Right Shift** in a world to open the Fusion overlay. The menu uses a cached high-resolution texture, Inter typography, and your launcher accent. The white logo appears inside the menu; it stays hidden during normal gameplay.
 
@@ -37,15 +43,15 @@ Press **Right Shift** in a world to open the Fusion overlay. The menu uses a cac
 - **Fusion Focus** lowers the frame cap while Minecraft is unfocused and restores the game cap on return.
 - **Fusion Particles** expires distant particles to reduce subsequent update/render work.
 
-The same eight version families remain available: **1.8 · 1.12 · 1.16 · 1.18 · 1.19 · 1.20 · 1.21 · 26.1**. Fusion Runtime 0.4.0 includes mappings for all **49 existing releases** in those families. New releases are not offered until their runtime support is added. See [runtime details](docs/MODS.md).
+The same eight version families remain available: **1.8 · 1.12 · 1.16 · 1.18 · 1.19 · 1.20 · 1.21 · 26.1**. Fusion Runtime 0.5.0 includes mappings for all **49 existing releases** in those families. New releases are not offered until their runtime support is added. See [runtime details](docs/MODS.md).
 
-Fusion's built-in modules run in the **Fusion** profile. Fabric/Forge community mods use separate profiles; they are not mixed into the first-party runtime. Downloads come from Modrinth, with required dependencies resolved and files verified before installation. See [community mods](docs/COMMUNITY-MODS.md).
+Fusion's built-in modules also run alongside supported Fabric and Forge profiles. Select several mods across searches, then download them together with shared dependencies. The in-game Installed category lists your third-party mods. Downloads come from Modrinth, with required dependencies resolved and files verified before installation. See [community mods](docs/COMMUNITY-MODS.md).
 
 ## Install once, update in place
 
 ![Fusion installer](docs/images/installer.png)
 
-Download `Fusion-Setup-0.10.0.exe` from [Releases](https://github.com/MasterGab1/Fusion-Client/releases). Choose a folder and shortcut preference, then launch Fusion. The native setup UI uses the established NSIS engine for installation and uninstallation.
+Download `Fusion-Setup-0.11.0.exe` from [Releases](https://github.com/MasterGab1/Fusion-Client/releases). Choose a folder and shortcut preference, then launch Fusion. The custom setup and uninstaller use the established NSIS engine. Uninstalling preserves your worlds, mods, skins and preferences.
 
 Future releases download through **Updates** and install when you restart Fusion. Worlds, skins, settings and custom artwork remain in your Windows user-data folder.
 
@@ -53,9 +59,9 @@ Future releases download through **Updates** and install when you restart Fusion
 
 ## Microsoft sign-in
 
-Sign-in opens your browser and returns to Fusion through PKCE authorization. Every launch verifies a renewable Microsoft session, Java ownership and a Minecraft profile. There is one official edition and no offline-account mode.
+Sign-in opens your browser and returns to Fusion through PKCE authorization. Direct launches verify a renewable Microsoft session, Java ownership and a Minecraft profile. There is one official edition and no offline-account mode.
 
-The public Microsoft application ID is bundled, so players do not enter application IDs or device codes. The application's owner must configure its localhost redirect and obtain any required Minecraft API access. A server-side registration rejection cannot be fixed by rebuilding the launcher. Follow the [Microsoft setup guide](docs/MICROSOFT-SETUP.md).
+The public Microsoft application ID is bundled, so players do not enter application IDs or device codes. The application's owner must configure its localhost redirect and obtain any required Minecraft API access. A server-side registration rejection cannot be fixed by rebuilding the launcher. For testing with your existing official launcher account, use **Sign in → Prepare Fusion installation**, then launch the generated Fusion installation from Minecraft Launcher. Fusion never imports its account files or tokens. Follow the [Microsoft setup guide](docs/MICROSOFT-SETUP.md).
 
 ## Compact preferences
 
@@ -73,18 +79,19 @@ npm test
 npm run dist
 ```
 
-The final installer and update metadata are in `release-bundle/0.10.0/`. `npm run dev` starts the desktop development app. Nothing is published by `npm run dist`.
+The final installer and update metadata are in `release-bundle/0.11.0/`. `npm run dev` starts the desktop development app. Nothing is published by `npm run dist`.
 
 ```powershell
 npm run test:ui
 npm run test:mods
 node scripts/test-installer.cjs
+node scripts/test-uninstaller.cjs
 ```
 
 UI checks use isolated data and hidden Electron windows. Installer tests use an isolated mock engine and do not replace your installed launcher. Additional runtime audits and JVM binding checks use official cached client JARs; no game classes are distributed.
 
 ## Verification and limits
 
-This release passes settings/authentication/download tests, hidden launcher UI checks, custom installer flow checks, a live authenticated private update download/checksum check, and mapped-member/JVM screen checks for all 49 releases. These checks do not replace a gameplay run on every GPU and release. No FPS improvement claim is based on a benchmark. Real account sign-in still depends on Minecraft accepting Fusion's application registration.
+Validation includes 51 unit tests, hidden launcher UI checks with real batch mod downloads, installer/uninstaller mock-engine checks, runtime rendering tests, and real Fabric/legacy Forge prelaunch probes. The same 49 vanilla runtime profiles remain available, with 36 Fabric and 39 Forge mappings. Modern Forge profiles have not had equivalent live-loader QA. These checks do not replace gameplay testing on every release. No measured FPS gain is claimed. Direct Fusion sign-in and the official-launcher handoff still need a real-account check; direct sign-in depends on Minecraft accepting Fusion's application registration.
 
 Fusion is an independent launcher and is not affiliated with Mojang or Microsoft. Third-party library notices are included in the application assets and runtime. Logos and version artwork are project-supplied assets; inclusion here does not grant additional rights to Minecraft artwork.

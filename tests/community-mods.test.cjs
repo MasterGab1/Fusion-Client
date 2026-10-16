@@ -6,6 +6,21 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { CommunityMods, safeFile, safeDownload } = require('../electron/community-mods.cjs');
 const game = { version: '1.20.1', loader: 'fabric' };
+test('batch selection merges shared dependencies and keeps explicitly selected roots', async t => {
+  const {service}=await fixture(t);
+  const plan=await service.plan({...game,projectIds:['root','other','dep']});
+  assert.equal(plan.mods.length,3);
+  assert.ok(plan.mods.every(m=>m.root));
+  const installed=await service.install(plan.token);
+  assert.equal(installed.length,3);
+  await assert.rejects(service.plan({...game,projectIds:[]}),/Select between/);
+});
+test('a conflict anywhere in a batch rejects the whole preview', async t => {
+  const {service,versions}=await fixture(t);
+  versions.root.dependencies.push({project_id:'other',dependency_type:'incompatible'});
+  await assert.rejects(service.plan({...game,projectIds:['root','other']}),/conflicts/);
+  assert.deepEqual(await service.list(game.version,game.loader),[]);
+});
 async function fixture(t, overrides = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'fusion-mods-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
