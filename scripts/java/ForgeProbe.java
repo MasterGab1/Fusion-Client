@@ -11,7 +11,7 @@ public final class ForgeProbe implements ITweaker {
  public String[] getLaunchArguments(){
   try {
    Properties p=new Properties();try(InputStream in=new FileInputStream(System.getProperty("fusion.qa.profile"))){p.load(in);}
-   for(String hook:new String[]{"hud","fps","particle"})Class.forName(p.getProperty(hook+".class").replace('/','.'),false,loader).getDeclaredMethods();
+   for(String hook:new String[]{"turn","camera","hud","fps","particle"})Class.forName(p.getProperty(hook+".class").replace('/','.'),false,loader).getDeclaredMethods();
    Class.forName("net.minecraftforge.client.GuiIngameForge",false,loader).getDeclaredMethods();
    Class<?> hooks=Class.forName("fusion.runtime.Hooks",false,loader);
    if(hooks.getClassLoader()!=null)throw new AssertionError("Duplicate Fusion runtime");

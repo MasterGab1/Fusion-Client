@@ -7,7 +7,7 @@ public final class FabricProbe implements PreLaunchEntrypoint {
   try {
    ClassLoader loader=Thread.currentThread().getContextClassLoader();
    Properties p=new Properties();try(java.io.InputStream in=FabricProbe.class.getResourceAsStream("/fusion-profile.properties")){p.load(in);}
-   for(String hook:new String[]{"hud","fps","particle","keyboard"})if(p.containsKey(hook+".class"))Class.forName(p.getProperty(hook+".class").replace('/','.'),false,loader).getDeclaredMethods();
+   for(String hook:new String[]{"turn","camera","hud","fps","particle","keyboard"})if(p.containsKey(hook+".class"))Class.forName(p.getProperty(hook+".class").replace('/','.'),false,loader).getDeclaredMethods();
    Class<?> hooks=Class.forName("fusion.runtime.Hooks",false,loader);
    if(hooks.getClassLoader()!=null)throw new AssertionError("Fusion is not shared through bootstrap: "+hooks.getClassLoader());
    try(java.io.BufferedReader input=new java.io.BufferedReader(new java.io.InputStreamReader(FabricProbe.class.getResourceAsStream("/bindings.tsv"),"UTF-8"))) {

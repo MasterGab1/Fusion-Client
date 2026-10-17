@@ -17,3 +17,8 @@ build/*
 *.pfx
 *.pem
 *.key
+# Local developer configuration and game output are never source artifacts.
+config/
+logs/
+launcher_accounts.json
+settings.json

@@ -76,7 +76,7 @@ class UpdateService {
     if (this.blocked()) throw new Error('Close Minecraft and finish any account operation before restarting Fusion.');
     if (!this.installed || this.pending || this.state.status !== 'ready' || !this.release) throw new Error('Download and verify the update first.');
     this.set({ status: 'installing' });
-    this.engine().quitAndInstall(true, true);
+    this.engine().quitAndInstall(false, true);
     return this.snapshot();
   }
 }

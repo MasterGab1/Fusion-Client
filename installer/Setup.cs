@@ -24,7 +24,8 @@ namespace FusionSetup {
     static string temp;
     [STAThread] public static int Main(string[] args) {
       try {
-        if (Array.Exists(args, x => x.Equals("/S", StringComparison.OrdinalIgnoreCase))) {
+        bool updating = Array.Exists(args, x => x == "--updated" || x == "--qa-update");
+        if (!updating && Array.Exists(args, x => x.Equals("/S", StringComparison.OrdinalIgnoreCase))) {
           string engine = Extract(null);
           // NSIS /D= must be last and consumes the remainder, including spaces.
           string forwarded = "";
@@ -37,11 +38,14 @@ namespace FusionSetup {
           return code;
         }
         var application = new Application();
-        var window = new SetupWindow();
+        var window = new SetupWindow(updating, args);
 #if QA
-        if (args.Length == 2 && args[0] == "--qa-install") return window.TestInstall(args[1]);
+        int updateTest = Array.IndexOf(args, "--qa-update");
+        if(updateTest >= 0 && updateTest + 1 < args.Length) return window.TestInstall(args[updateTest + 1]);
+        if (args.Length == 2 && (args[0] == "--qa-install" || args[0] == "--qa-update")) return window.TestInstall(args[1]);
 #endif
         if (args.Length == 2 && args[0] == "--preview") {
+          window.PreparePreview();
           var content = (FrameworkElement)window.Content; content.Measure(new Size(820, 520)); content.Arrange(new Rect(0, 0, 820, 520)); content.UpdateLayout();
           var bitmap = new RenderTargetBitmap(820, 520, 96, 96, PixelFormats.Pbgra32); bitmap.Render(window.Content as Visual);
           var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -50,7 +54,7 @@ namespace FusionSetup {
         }
         application.Run(window); return window.Result;
       } catch (Exception error) {
-        // Silent update failures must never open a modal or expose command-line arguments.
+        // Silent deployment failures never open a modal or expose arguments.
         if (!Array.Exists(args, x => x.Equals("/S", StringComparison.OrdinalIgnoreCase))) MessageBox.Show(error.Message, "Fusion setup", MessageBoxButton.OK, MessageBoxImage.Error);
         return 1;
       } finally { if (temp != null) try { Directory.Delete(temp, true); } catch {} }
@@ -60,12 +64,15 @@ namespace FusionSetup {
       temp = Path.Combine(Path.GetTempPath(), "Fusion-Setup-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(temp);
       string target = Path.Combine(temp, "engine.exe");
       using (var source = Assembly.GetExecutingAssembly().GetManifestResourceStream("engine.exe"))
-      using (var output = File.Create(target)) {
+      using (var output = File.Create(target)) using (var sha = SHA256.Create()) {
         byte[] buffer = new byte[1024 * 1024]; int count; long total = 0;
-        while ((count = source.Read(buffer, 0, buffer.Length)) > 0) { output.Write(buffer, 0, count); total += count; if (progress != null) progress((double)total / source.Length * 100); }
-      }
-      using (var sha = SHA256.Create()) using (var file = File.OpenRead(target)) {
-        if (BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant() != Hash) throw new IOException("Installer verification failed. Download Fusion setup again.");
+        var clock = Stopwatch.StartNew(); long last = -100;
+        while ((count = source.Read(buffer, 0, buffer.Length)) > 0) {
+          output.Write(buffer, 0, count); sha.TransformBlock(buffer, 0, count, buffer, 0); total += count;
+          if (progress != null && (clock.ElapsedMilliseconds - last >= 50 || total == source.Length)) { progress((double)total / source.Length * 100); last = clock.ElapsedMilliseconds; }
+        }
+        sha.TransformFinalBlock(new byte[0], 0, 0);
+        if (BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant() != Hash) throw new IOException("Installer verification failed. Download Fusion setup again.");
       }
       return target;
     }
@@ -76,7 +83,7 @@ namespace FusionSetup {
   class SetupWindow : Window {
     TextBox folder; CheckBox desktop; Button install, browse, close; ProgressBar progress; TextBlock status, title, subtitle;
     bool installing, done; public int Result = 0;
-    public SetupWindow() {
+    public SetupWindow(bool updating, string[] args) {
       Width = 820; Height = 520; ResizeMode = ResizeMode.NoResize; WindowStartupLocation = WindowStartupLocation.CenterScreen;
       WindowStyle = WindowStyle.None; AllowsTransparency = true; Background = Brushes.Transparent; Title = "Fusion Setup";
       Content = XamlReader.Parse(@"
@@ -95,6 +102,14 @@ namespace FusionSetup {
       ((TextBlock)root.FindName("Version")).Text = "FUSION " + Program.Version;
       using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("brand.png")) { var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream; image.EndInit(); ((Image)root.FindName("Brand")).Source = image; Icon = image; }
       folder.Text = ExistingLocation() ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Fusion Launcher");
+      foreach (string arg in args) if (arg.StartsWith("/D=", StringComparison.OrdinalIgnoreCase)) folder.Text = arg.Substring(3);
+      if (updating) {
+        title.Text = "Updating Fusion"; subtitle.Text = "Your next version is on its way.";
+        folder.IsEnabled = browse.IsEnabled = desktop.IsEnabled = false;
+        desktop.IsChecked = File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Fusion Launcher.lnk"));
+        install.Content = "Update Fusion";
+        Loaded += (s,e) => install.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+      }
       close.Click += (s,e) => Close();
       MouseLeftButtonDown += (s,e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
       Closing += (s,e) => { if (installing) e.Cancel = true; };
@@ -105,15 +120,19 @@ namespace FusionSetup {
         try { target = Path.GetFullPath(folder.Text.Trim()); if (!Path.IsPathRooted(folder.Text) || target.Contains("\"") || target.Contains("\n") || target == Path.GetPathRoot(target) || target.StartsWith(@"\\")) throw new IOException(); }
         catch { status.Text = "Choose a local installation folder, not a drive root."; return; }
         folder.Text = target; installing = true; install.IsEnabled = browse.IsEnabled = folder.IsEnabled = desktop.IsEnabled = close.IsEnabled = false;
-        status.Text = "Preparing and verifying the installer…"; title.Text = "Installing Fusion"; install.Content = "Installing…";
+        status.Text = "Preparing and verifying the installer…"; title.Text = updating ? "Updating Fusion" : "Installing Fusion"; install.Content = updating ? "Updating…" : "Installing…";
         try {
           string engine = await Task.Run(() => Program.Extract(value => Dispatcher.Invoke(new Action(() => progress.Value = value))));
           progress.IsIndeterminate = true; status.Text = "Installing files and shortcuts. This may take a moment.";
-          string arguments = "/S /currentuser " + (desktop.IsChecked == true ? "" : "--no-desktop-shortcut ") + "/D=" + target;
+          string arguments = "/S /currentuser " + (updating ? "--updated " : "") + (desktop.IsChecked == true ? "" : "--no-desktop-shortcut ") + "/D=" + target;
           int code = await Task.Run(() => Program.Run(engine, arguments));
           if (code != 0) throw new IOException("Setup could not finish (code " + code + "). Close Fusion and try again.");
           if (!File.Exists(Path.Combine(target, "Fusion Launcher.exe"))) throw new IOException("Fusion was not found in the selected folder. Try setup again.");
           progress.IsIndeterminate = false; progress.Value = 100; done = true; Result = 0; title.Text = "Fusion is ready"; subtitle.Text = "Installed and ready to open."; status.Text = "Your worlds and settings stay with you when Fusion updates."; install.Content = "Launch Fusion  →";
+          if (updating && Array.Exists(args, x => x == "--force-run")) {
+            installing = false;
+            Process.Start(new ProcessStartInfo(Path.Combine(target, "Fusion Launcher.exe")) { UseShellExecute = true }); Close();
+          }
         } catch (Exception error) { Result = 1; progress.IsIndeterminate = false; progress.Value = 0; status.Text = error.Message; title.Text = "Let's try again"; install.Content = "Retry install"; browse.IsEnabled = folder.IsEnabled = desktop.IsEnabled = true; }
         finally { installing = false; install.IsEnabled = close.IsEnabled = true; }
       };
@@ -131,6 +150,7 @@ namespace FusionSetup {
       return Result;
     }
 #endif
+    internal void PreparePreview() { folder.Text = @"%LOCALAPPDATA%\Programs\Fusion Launcher"; }
     static string ExistingLocation() {
       using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall")) {
         if (key == null) return null;

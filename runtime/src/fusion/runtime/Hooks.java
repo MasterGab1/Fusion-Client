@@ -8,6 +8,9 @@ public final class Hooks {
     private static MinecraftAdapter adapter;
     private static boolean failed;
     private static Object hudContext;
+    private static int hudDepth;
+    private static ClientFeatures features;
+    private static boolean featuresFailed;
     private static final BackgroundFpsMod focus = new BackgroundFpsMod();
     private static final ParticleDistanceMod particles = new ParticleDistanceMod();
     private static volatile ClassLoader gameLoader;
@@ -27,15 +30,28 @@ public final class Hooks {
         return adapter;
     }
     private static void failure(Throwable error) { if (!failed) { failed = true; System.err.println("[Fusion] Runtime adapter disabled: " + error); error.printStackTrace(); } }
-    public static void beginHud(Object context) { hudContext = context; }
+    public static void beginHud(Object context) { if(hudDepth++ == 0)hudContext = context; }
     public static void endHud() {
+        if(hudDepth > 0 && --hudDepth > 0)return;
         Object context = hudContext; hudContext = null;
         if (failed) return;
         try {
             MinecraftAdapter game = game();
             ClientMenu.tick(game, profile, config, context);
+            try { if(!featuresFailed) { if(features==null)features=new ClientFeatures(game,profile,config);features.draw(context); } }
+            catch(Throwable error){disableFeatures(error);}
         } catch (Throwable error) { failure(error); }
     }
+    private static void disableFeatures(Throwable error) {
+        if(features!=null)try{features.release();}catch(Exception ignored){}
+        if(!featuresFailed)System.err.println("[Fusion] Optional HUD/camera features unavailable: "+error);
+        featuresFailed=true;
+    }
+    public static boolean turn(Object player,double dx,double dy){
+        try{return !featuresFailed&&features!=null&&features.turn(player,dx,dy);}catch(Throwable error){disableFeatures(error);return false;}
+    }
+    public static float cameraYaw(float value){return featuresFailed||features==null?value:features.yaw(value);}
+    public static float cameraPitch(float value){return featuresFailed||features==null?value:features.pitch(value);}
     public static int limitFps(int original) {
         if (!config.focus || failed) return original;
         try { return focus.limit(game(), config, original); } catch (Throwable error) { failure(error); return original; }

@@ -35,12 +35,16 @@ public final class ClientMenu {
     }
     private static int[] layout(Object screen) throws Exception {
         int width = gui.width(screen), height = gui.height(screen);
-        double scale = Math.min(0.75, Math.min((width - 24) / (double)OverlayPainter.WIDTH, (height - 24) / (double)OverlayPainter.HEIGHT));
+        double scale = Math.min(width / (double)OverlayPainter.WIDTH, height / (double)OverlayPainter.HEIGHT) * config.menuScale / 100.0;
         int w = Math.max(1, (int)(OverlayPainter.WIDTH * scale)), h = Math.max(1, (int)(OverlayPainter.HEIGHT * scale));
         return new int[] { (width - w) / 2, (height - h) / 2, w, h };
     }
     private static int control(int[] a, double mx, double my) { return OverlayPainter.control((mx - a[0]) * OverlayPainter.WIDTH / a[2], (my - a[1]) * OverlayPainter.HEIGHT / a[3], category); }
-    private static void toggle(int id) { if (id == 0) config.watermark = !config.watermark; else if (id == 1) config.focus = !config.focus; else config.particles = !config.particles; save(); }
+    private static void toggle(int id) {
+        switch(id) { case 0: config.watermark = !config.watermark; break; case 1: config.focus = !config.focus; break; case 2: config.particles = !config.particles; break;
+            case 3: config.saturation = !config.saturation; break; case 4: config.freelook = !config.freelook; break; case 5: config.fps = !config.fps; break; case 6: config.coordinates = !config.coordinates; break; }
+        save();
+    }
     private static void save() {
         try { config.save(); saveError = null; }
         catch (Exception error) { saveError = "Could not save settings"; System.err.println("[Fusion] Settings save failed: " + error); }
@@ -51,11 +55,11 @@ public final class ClientMenu {
             int[] a = layout(screen); int hover = control(a, mx, my);
             if (painter == null) painter = new OverlayPainter();
             if (texture == null) texture = new OverlayTexture(gui.game, profile);
-            String state = config.modPage + ":" + category + ":" + hover + ":" + config.watermark + ":" + config.focus + ":" + config.particles + ":" + config.backgroundFps + ":" + config.particleDistance + ":" + config.accent + ":" + saveError;
+            String state = config.modPage + ":" + category + ":" + hover + ":" + config.watermark + ":" + config.focus + ":" + config.particles + ":" + config.backgroundFps + ":" + config.particleDistance + ":" + config.accent + ":" + saveError + ":" + config.menuScale + ":" + config.saturation + ":" + config.freelook + ":" + config.fps + ":" + config.coordinates;
             if (!state.equals(renderedState)) {
                 texture.upload(painter.paint(config, category, hover, profile.getProperty("version"), saveError, 2)); renderedState = state;
             }
-            gui.rect(ctx, 0, 0, gui.width(screen), gui.height(screen), 0x9006090f);
+            gui.rect(ctx, 0, 0, gui.width(screen), gui.height(screen), 0x5006090f);
             texture.draw(ctx, a[0], a[1], a[2], a[3]);
         } catch (Throwable error) { System.err.println("[Fusion] Menu render failed: " + error); error.printStackTrace(); try { gui.close(); } catch (Exception ignored) { } }
     }
@@ -64,9 +68,10 @@ public final class ClientMenu {
         try {
             int id = control(layout(screen), mx, my);
             if (id == 1) gui.close();
-            else if (id >= 10 && id <= 13) category = id - 10;
+            else if (id >= 10 && id <= 14) category = id - 10;
             else if (id == 50 || id == 51) config.modPage = Math.max(0,Math.min(Math.max(0,(config.mods.length-1)/5),config.modPage+(id==50?-1:1)));
-            else if (id >= 20 && id <= 22) toggle(id - 20);
+            else if (id >= 20 && id <= 26) toggle(id - 20);
+            else if (id == 60 || id == 61) { config.menuScale = Math.max(60, Math.min(95, config.menuScale + (id == 60 ? -5 : 5))); save(); }
             else if (id == 31 || id == 41) { config.backgroundFps = Math.max(5, Math.min(60, config.backgroundFps + (id == 31 ? -5 : 5))); save(); }
             else if (id == 32 || id == 42) { config.particleDistance = Math.max(8, Math.min(64, config.particleDistance + (id == 32 ? -4 : 4))); save(); }
         } catch (Exception error) { System.err.println("[Fusion] Menu input failed: " + error); }

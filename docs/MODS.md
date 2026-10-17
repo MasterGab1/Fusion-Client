@@ -1,24 +1,27 @@
 # Fusion mods
 
-Fusion 0.11 combines the first-party runtime with supported Fabric and Forge installations. See [community mods](COMMUNITY-MODS.md) for batch downloads, dependencies and compatibility.
+Fusion 0.13 combines the first-party runtime with supported Fabric and Forge installations. See [community mods](COMMUNITY-MODS.md) for batch downloads, dependencies and compatibility.
 
-The Fusion profile uses first-party code in `runtime/src/fusion/runtime`. It does not load Sodium, Lithium, FerriteCore, FoamFix, Entity Culling, Fabric, or Forge. The launcher bundles a small Fusion Runtime JAR and loads it as a Java agent; original Minecraft JARs on disk stay unchanged.
+Fusion uses first-party code in `runtime/src/fusion/runtime`. It does not load Sodium, Lithium, FerriteCore, FoamFix, Entity Culling, Fabric, or Forge. The launcher bundles a small Fusion Runtime JAR and loads it as a Java agent; original Minecraft JARs on disk stay unchanged.
 
-The existing eight families retain their 49 stable releases. Every release offered by this build has a bundled Fusion runtime profile, including the base and point releases. New releases are admitted only after mappings are added and checked; snapshots are excluded. Select Fusion, Fabric or Forge in Settings. The Installed tab contains the built-in controls.
+The existing eight families retain their 49 stable releases. Every release offered by this build has a bundled Fusion runtime profile, including the base and point releases. New releases are admitted only after mappings are added and checked; snapshots are excluded. Choose Fabric or Forge in Mods when using third-party mods. The Installed tab contains the built-in controls.
 
 | Module | Behavior |
 | --- | --- |
-| Fusion HUD | White Fusion logo inside the Fusion Mods overlay only. No logo or FPS text is drawn over normal gameplay. |
-| Fusion Focus | Caps the original frame limit while the game is unfocused, then restores the original limit on return. Default: 30 FPS; configurable from 5–60 FPS. Never raises a lower game cap. |
-| Fusion Particles | Expires particles created farther than the configured distance from the player. Default: 24 blocks; configurable from 8–64 blocks. Player coordinates are sampled at most once per 25 milliseconds. |
+| Watermark | Small white logo while an in-world menu is open; hidden during normal gameplay. |
+| Saturation | Hunger and estimated client saturation, not server-verified. Off by default. |
+| Free look | Hold Left Alt to rotate the camera without changing player aim; releases to the previous camera mode. Off by default. |
+| FPS / Coordinates | Optional game-font readouts. Off by default; respect Hide GUI. |
+| Background FPS | Caps the original frame limit while the game is unfocused, then restores the original limit on return. Default: 30 FPS; configurable from 5–60 FPS. Never raises a lower game cap. |
+| Particles | Expires particles created farther than the configured distance from the player. Default: 24 blocks; configurable from 8–64 blocks. Player coordinates are sampled at most once per 25 milliseconds. |
 
 These are initial optimizations, not a renderer replacement. Particle creation still occurs before early expiration; the savings are in subsequent ticking and rendering. Particle distance deliberately reduces distant effects. FPS gains have not been benchmarked in matched worlds.
 
-Press **Right Shift** in a world to open the Fusion Mods menu. All mods, HUD, and Performance categories list the three real modules. Use the switches to toggle, use +/− to adjust limits, or press 1–3 to toggle modules. Right Shift or Escape closes the menu. In-game changes take effect immediately and save per release to fusion.properties; the launcher rereads them when its Mods tab gains focus. Launcher switches apply at the next launch. Settings contains global background FPS and particle distance defaults; changing them updates existing profiles. New installations use Fusion by default; existing saved Vanilla selections are preserved.
+Press **Right Shift** in a world to open the Fusion Mods menu. Mods, HUD, Performance and Controls organize the seven built-in features. The Installed category lists third-party mods. Use the switches to toggle, use +/− to adjust limits, or press 1–3 to toggle modules. Right Shift or Escape closes the menu. In-game changes take effect immediately and save per release to fusion.properties; the launcher rereads them when its Mods tab gains focus. Launcher switches apply at the next launch. The menu size controls range from 60–95% of the available screen, defaulting to 75%. Settings contains menu size, background FPS and particle distance defaults; changing them updates existing profiles. New installations use Fusion by default; existing saved Vanilla selections are preserved.
 
 Worlds remain isolated: Vanilla uses `instances/<version>` and Fusion uses `instances/<version>-performance`. The latter name is retained to preserve existing worlds. Files tracked by the previous third-party preset are renamed `.disabled` during migration; user-added JARs are preserved. Fabric and Forge use their own isolated game folders and load third-party JARs alongside Fusion.
 
-The runtime has no network access, telemetry, account handling, or server changes. Its three hooks run in the client. A runtime integrity check precedes installation. Microsoft mode verifies the account in the launcher’s main process. An explicitly selected Local testing profile can launch singleplayer without Microsoft sign-in; there is no separate Test edition.
+The runtime has no network access, telemetry, account handling, or server changes. Its hooks run in the client. A runtime integrity check precedes installation. Microsoft mode verifies the account in the launcher’s main process. An explicitly selected Local testing profile can launch singleplayer without Microsoft sign-in; there is no separate Test edition.
 
 ## Building
 
@@ -30,9 +33,9 @@ Profiles use Mojang client mappings for modern obfuscated releases, MCP SRG mapp
 
 Tests: `npm test`, `node scripts/runtime-world-test.cjs <version>` for interactive local-world QA. The latter keeps its test game open until closed. Test outputs live under `test-output/v0.8`.
 
-## Texture overlay (Runtime 0.5.0)
+## Texture overlay (Runtime 0.6.0)
 
-The in-game screen uses the same Inter font, charcoal palette, accent colors, icon rail, and rounded cards as the launcher. A Java2D painter rasterizes the panel at 1600 × 1000, then uploads it as one Minecraft-owned texture with linear filtering. Mouse hit regions use the same virtual layout as the painter, so scaling preserves interaction. The texture is reused between changes and released when the menu closes. No rendering or image generation runs during ordinary gameplay. The launcher accent is copied into each game profile at launch.
+The in-game screen uses the same Inter font, charcoal palette, accent colors, icon rail, and rounded cards as the launcher. A Java2D painter rasterizes the panel at 1600 × 1000, then uploads it as one Minecraft-owned texture with linear filtering. Mouse hit regions use the same virtual layout as the painter, so scaling preserves interaction. The texture is reused between changes and released when the menu closes. The panel is not rendered during ordinary gameplay. Enabled HUD readouts use the game font; the menu-only watermark texture is cached. The launcher accent is copied into each game profile at launch.
 
 The overlay runs inside the game renderer and works with its window coordinates; it does not create a separate always-on-top desktop window. Native GPU behavior still needs hands-on confirmation on each target version. Static binding audits and JVM screen/bytecode verification cover all 49 releases. Rendering in a running world has not been manually rechecked on all 49.
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Play as PlayIcon, ChevronDown, ChevronRight, Check, LoaderCircle, ImagePlus, Settings2, Cpu, Puzzle, ArrowUpRight, Newspaper, Search, RotateCcw } from 'lucide-react';
 import { NewsCards } from './News.jsx';
-export const profileName = mode => ({ performance: 'Fusion', vanilla: 'Vanilla', fabric: 'Fabric', forge: 'Forge' }[mode] || 'Fusion');
+export const profileName = mode => ({ performance: 'Minecraft', vanilla: 'Vanilla', fabric: 'Fabric', forge: 'Forge' }[mode] || 'Fusion');
 export default function Play({ selected, families, activeFamily, artwork, settings, profile, busy, loading, launch, launchGame, cancelLaunch, choose, selecting, navigate, changeBackground, resetBackground, customBackgrounds, importing, news, openArticle }) {
   const [picker, setPicker] = useState(false), [query, setQuery] = useState('');
   const pickerRef = useRef();
@@ -22,7 +22,7 @@ export default function Play({ selected, families, activeFamily, artwork, settin
         </div>
         {launch.busy && <div className="hero-progress"><progress max="100" value={launch.progress ?? undefined}/><button onClick={cancelLaunch}>Cancel</button></div>}
       </div>
-      <div className="hero-footer"><span>{activeFamily?.label}<b>{selected}</b></span><span className="profile-pill"><i/>{profileName(settings.launchMode)} profile</span></div>
+      <div className="hero-footer"><span>{activeFamily?.label}<b>{selected}</b></span>{['fabric','forge'].includes(settings.launchMode) && <span className="profile-pill"><i/>{profileName(settings.launchMode)}</span>}</div>
     </section>
     <div className="play-lower" hidden={!settings.showNews}><section className="home-news"><div className="section-title"><h2>Latest news</h2><button onClick={() => navigate('news')}>All news<ChevronRight size={13}/></button></div>{news.entries.length ? <NewsCards entries={news.entries.slice(0, 2)} open={openArticle} compact/> : <button className="news-placeholder" onClick={() => navigate('news')}><Newspaper size={25}/><span>Minecraft news<small>{news.cached ? 'Open the feed to refresh saved stories' : 'Loading official stories…'}</small></span><ArrowUpRight size={16}/></button>}</section>
 

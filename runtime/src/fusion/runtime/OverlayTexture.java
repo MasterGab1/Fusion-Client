@@ -26,10 +26,13 @@ final class OverlayTexture {
         throw new NoSuchMethodException(owner.getName() + "." + name + desc);
     }
     OverlayTexture(MinecraftAdapter game, Properties p) throws Exception {
+        this(game, p, "menu");
+    }
+    OverlayTexture(MinecraftAdapter game, Properties p, String name) throws Exception {
         this.game = game; this.p = p; legacy = game.drawMode.equals("legacy"); modern = Boolean.parseBoolean(p.getProperty("texture.pipeline", "false")); renderType = Boolean.parseBoolean(p.getProperty("texture.renderType", "false")); samplerMode = Boolean.parseBoolean(p.getProperty("texture.sampler", "false")); supplierTexture = Boolean.parseBoolean(p.getProperty("texture.supplier", "false"));
         Class<?> resource = game.type("texture.id.class"), owner = game.type("texture.manager.class");
         manager = MinecraftAdapter.method(game.type("mc.class"), p.getProperty("texture.manager")).invoke(game.minecraft());
-        id = p.getProperty("texture.id.method").equals("new") ? resource.getConstructor(String.class).newInstance("fusion:menu") : resource.getMethod(p.getProperty("texture.id.method"), String.class).invoke(null, "fusion:menu");
+        id = p.getProperty("texture.id.method").equals("new") ? resource.getConstructor(String.class).newInstance("fusion:" + name) : resource.getMethod(p.getProperty("texture.id.method"), String.class).invoke(null, "fusion:" + name);
         dynamic = game.type("texture.dynamic.class"); nativeImage = legacy ? null : game.type("texture.native.class");
         register = mapped(owner, p.getProperty("texture.register"), p.getProperty("texture.register.desc"));
         release = owner.getMethod(p.getProperty("texture.release"), resource);

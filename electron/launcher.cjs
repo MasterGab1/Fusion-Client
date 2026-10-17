@@ -153,10 +153,10 @@ class GameLauncher {
         const { prepareLoader } = require('./loaders.cjs');
         version = await prepareLoader({ version: versionId, loader: settings.launchMode, resourcePath, javaPath, settings, launcher: this, loaderVersion: instance?.loaderVersion });
       }
-      if (performance || community) {
-        if (!this.mods) throw new Error('The mod manager is unavailable.');
-        fusionRuntime = await this.mods.install(versionId, resourcePath, gamePath, this, settings);
-      }
+      // Fusion features belong to the client, including older saved Vanilla installations.
+      // Keep each installation's existing game directory and loader unchanged.
+      if (!this.mods) throw new Error('The mod manager is unavailable.');
+      fusionRuntime = await this.mods.install(versionId, resourcePath, gamePath, this, settings);
       // javaw avoids a console window; the game's own native window must remain visible.
       const windowedJava = javaPath.replace(/java\.exe$/i, 'javaw.exe');
       const gameJava = await fs.access(windowedJava).then(() => windowedJava, () => javaPath);
@@ -189,9 +189,10 @@ class GameLauncher {
       this.status('Minecraft is running', 100);
       this.emit('game-started', { version: versionId });
       this.log(`Launched ${versionId} as ${session.profile.name}.`);
-      const output = data => this.log((token ? String(data).replaceAll(token, '[redacted]') : String(data)).slice(0, 12000), 'game');
-      child.stdout?.on('data', output);
-      child.stderr?.on('data', output);
+      for (const stream of [child.stdout, child.stderr]) if (stream) {
+        const output = require('./game-output.cjs').gameOutput((message, level) => this.log(message, level), token);
+        stream.on('data', data => output.write(data)); stream.on('end', () => output.end());
+      }
       child.on('error', () => { this.emit('game-closed', {}); this.running = false; this.status('Could not start Minecraft'); this.log('Minecraft could not start. Check the Java setting and game output.', 'error'); });
       child.on('close', code => { this.running = false; this.status('Ready to play'); this.emit('game-closed', {}); this.log(`Minecraft closed (exit code ${code ?? 'unknown'}).`, code ? 'error' : 'info'); });
       return { profile: session.profile };

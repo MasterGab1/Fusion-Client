@@ -17,6 +17,14 @@ for (const version of fs.readdirSync(path.join(root,'build/runtime-cache')).filt
   const manager = `net/minecraft/client/particle/${version.startsWith('1.8') ? 'EffectRenderer' : 'ParticleManager'}`;
   const font = 'net/minecraft/client/gui/FontRenderer';
   save(version, {
+    'food.player.class': cls('net/minecraft/entity/player/EntityPlayer'), 'food.class': cls('net/minecraft/util/FoodStats'),
+    'food.get': method('net/minecraft/entity/player/EntityPlayer','func_71024_bL').name,
+    'food.level': method('net/minecraft/util/FoodStats','func_75116_a').name, 'food.saturation': method('net/minecraft/util/FoodStats','func_75115_e').name,
+    'turn.class': cls(entity), 'turn.method': method(entity,'func_70082_c').name, 'turn.desc':'(FF)V',
+    'camera.class': cls('net/minecraft/client/renderer/EntityRenderer'), 'camera.method': method('net/minecraft/client/renderer/EntityRenderer','func_78467_g').name, 'camera.desc':'(F)V',
+    'camera.option': field('net/minecraft/client/settings/GameSettings','field_74320_O'),
+    'entity.yaw': field(entity,'field_70177_z'), 'entity.pitch': field(entity,'field_70125_A'),
+    'entity.prevYaw': field(entity,'field_70126_B'), 'entity.prevPitch': field(entity,'field_70127_C'),
     'mc.class': cls(mc), 'mc.instance': method(mc, 'func_71410_x').name,
     'mc.font': field(mc, 'field_71466_p'), 'mc.player': field(mc, 'field_71439_g'), 'mc.options': field(mc, 'field_71474_y'),
     'mc.fps.field': field(mc, 'field_71470_ab'), 'mc.focus': 'lwjgl2',
@@ -98,6 +106,15 @@ for (const version of fs.readdirSync(path.join(root,'build/runtime-cache')).filt
   const textureManager = 'net.minecraft.client.renderer.texture.TextureManager';
   const blit = method(fillOwner, 'blit', pipelines ? 'com.mojang.blaze3d.pipeline.RenderPipeline,' + textureId + ',int,int,float,float,int,int,int,int,int,int' : renderType ? 'java.util.function.Function,' + textureId + ',int,int,float,float,int,int,int,int,int,int' : (pose ? context : textureId) + ',int,int,int,int,float,float,int,int,int,int');
   save(version, {
+    'food.player.class': cls('net.minecraft.world.entity.player.Player'), 'food.class': cls('net.minecraft.world.food.FoodData'),
+    'food.get': method('net.minecraft.world.entity.player.Player','getFoodData','','net.minecraft.world.food.FoodData').name,
+    'food.level': method('net.minecraft.world.food.FoodData','getFoodLevel','','int').name,
+    'food.saturation': method('net.minecraft.world.food.FoodData','getSaturationLevel','','float').name,
+    'turn.class': cls(entity), 'turn.method': method(entity,'turn','double,double').name, 'turn.desc':'(DD)V',
+    'camera.class': cls('net.minecraft.client.Camera'), 'camera.method': method('net.minecraft.client.Camera','setRotation','float,float').name, 'camera.desc':'(FF)V',
+    'camera.option': field('net.minecraft.client.Options',minor === 16 && patch < 2 ? 'thirdPersonView' : 'cameraType'),
+    'entity.yaw': field(entity,'yRot'), 'entity.pitch': field(entity,'xRot'),
+    'entity.prevYaw': field(entity,'yRotO'), 'entity.prevPitch': field(entity,'xRotO'),
     'texture.pipeline': String(pipelines), 'texture.sampler': String(sampler), 'texture.supplier': String(supplierTexture), 'texture.renderType': String(renderType),
     ...(renderType ? { 'texture.renderType.class': cls('net.minecraft.client.renderer.RenderType'), 'texture.renderType.method': method('net.minecraft.client.renderer.RenderType','guiTextured',textureId,'net.minecraft.client.renderer.RenderType').name } : {}),
     ...(sampler ? { 'texture.sampler.method': method('com.mojang.blaze3d.systems.SamplerCache','getClampToEdge','com.mojang.blaze3d.textures.FilterMode','com.mojang.blaze3d.textures.GpuSampler').name, 'texture.sampler.field': field('net.minecraft.client.renderer.texture.AbstractTexture','sampler') } : {}),

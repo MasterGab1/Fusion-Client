@@ -15,7 +15,7 @@ Every build now processes the supplied files into local WebP assets. Previously 
 | Family | Source |
 | --- | --- |
 | 1.8 | `public/assets/versions/1.8-original.png` |
-| 1.12 | `world_of_color.png` |
+| 1.12 | `updates/world_of_color.png` |
 | 1.16 | `updates/netherupdate.png` |
 | 1.18 | `updates/caves_and_clifss.png` |
 | 1.19 | `updates/warden_udpatte.png` |
@@ -24,14 +24,6 @@ Every build now processes the supplied files into local WebP assets. Previously 
 | 26.1 | `updates/thecopperage.png` |
 
 These are family backgrounds, not claims that every subrelease corresponds to the update pictured. In particular, the supplied Copper Age artwork is assigned to 26.1 as a visual choice. `updates/villageandpillage.png` is preserved but not assigned because the requested families do not include 1.14. The Change background control can override any family image; overrides survive updates.
-
-## 0.1 — archived artwork
-
-Generated with the built-in image_gen tool and saved to `public/assets/fusion-world.png`. The app uses `public/assets/fusion-world.webp`.
-
-Final prompt:
-
-> Use case: stylized-concept. Asset type: wide background artwork for a premium Minecraft Java desktop launcher called Fusion. Create a gorgeous cinematic Minecraft voxel world, clearly block-built pixel-textured terrain, dramatic lush mountainous floating cliffs over a turquoise river valley, rustic block-built wooden and stone village houses, cherry blossom trees and pink petals, a distant glowing pink-purple portal built from dark blocks on the right, sunrise peach light from upper right with deep violet cloud shadows. Wide panoramic 16:9 image. Rich emerald vegetation, pale pink cherry blossoms, subtle purple atmosphere. Foreground depth with grassy block ledges. Composition: relatively calm dark mountainous vegetation on left third suitable for overlaid white text, most interesting village and portal details center/right. Beautiful high-end ray-traced Minecraft screenshot aesthetic, crisp square voxel geometry, cinematic atmospheric depth. No text, no lettering, no logo, no watermark, no UI. Generate as landscape.
 
 ## 0.8 — Fusion branding
 

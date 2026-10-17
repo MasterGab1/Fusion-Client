@@ -51,7 +51,7 @@ async function prepareOfficial({directory,launcher,version,settings,mods}) {
     if(community)resolved=await require('./loaders.cjs').prepareLoader({version,loader:settings.launchMode,resourcePath:directory,javaPath,settings,launcher});
     const suffix=settings.launchMode==='performance'?'performance':community?settings.launchMode:'';
     const gamePath=path.join(launcher.root,'instances',version+(suffix?'-'+suffix:''));await fs.mkdir(gamePath,{recursive:true});
-    const fusionRuntime=settings.launchMode==='vanilla'?null:await mods.install(version,directory,gamePath,launcher,settings);
+    const fusionRuntime=await mods.install(version,directory,gamePath,launcher,settings);
     launcher.checkCancelled();
     const result=await saveInstallation(directory,version,settings,gamePath,javaPath,fusionRuntime,resolved.id);
     launcher.status('Installation ready'); return result;

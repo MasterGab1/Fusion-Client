@@ -32,7 +32,7 @@ public final class ScreenBindingsTest {
                 Method original = declared(screen, name, desc), override = declared(generated, name, desc);
                 if (original == null || override == null || Modifier.isFinal(original.getModifiers())) throw new AssertionError("Invalid override " + part);
             }
-            for (String hook : new String[] { "hud", "fps", "particle", "keyboard" }) if (p.containsKey(hook + ".class")) Class.forName(p.getProperty(hook + ".class").replace('/', '.'), false, loader).getDeclaredMethods();
+            for (String hook : new String[] { "hud", "fps", "particle", "keyboard", "turn", "camera" }) if (p.containsKey(hook + ".class")) Class.forName(p.getProperty(hook + ".class").replace('/', '.'), false, loader).getDeclaredMethods();
             Class<?> mc = Class.forName(p.getProperty("mc.class").replace('/', '.'), false, loader);
             mc.getMethod(p.getProperty("mc.setScreen"), screen);
             Class<?> blitOwner = Class.forName(p.getProperty("texture.blit.class").replace('/', '.'), false, loader);

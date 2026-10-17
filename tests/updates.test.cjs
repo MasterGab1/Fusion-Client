@@ -8,7 +8,7 @@ function fixture(options = {}) {
   const engine = new EventEmitter(); const events = []; let blocked = false, installs = 0, checks = 0;
   engine.checkForUpdates = async () => { checks++; engine.emit('update-available', info(options.testBuild)); return { updateInfo: info(options.testBuild) }; };
   engine.downloadUpdate = async () => { engine.emit('download-progress', { percent: 42 }); engine.emit('update-downloaded', info(options.testBuild)); };
-  engine.quitAndInstall = () => installs++;
+  engine.quitAndInstall = (silent, forceRun) => { assert.equal(silent, false); assert.equal(forceRun, true); installs++; };
   const service = new UpdateService({ createUpdater: () => engine, version: '0.7.0', installed: true, testBuild: false, blocked: () => blocked, emit: e => events.push(e), ...options });
   return { service, engine, events, block: () => { blocked = true; }, installs: () => installs, checks: () => checks };
 }

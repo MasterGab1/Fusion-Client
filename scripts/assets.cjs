@@ -5,7 +5,7 @@ const sharp = require('sharp');
   await fs.mkdir('public/assets/versions', { recursive: true });
   const sources = {
     '1.8': 'public/assets/versions/1.8-original.png',
-    '1.12': 'world_of_color.png',
+    '1.12': 'updates/world_of_color.png',
     '1.16': 'updates/netherupdate.png',
     '1.18': 'updates/caves_and_clifss.png',
     '1.19': 'updates/warden_udpatte.png',

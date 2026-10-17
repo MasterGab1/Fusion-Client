@@ -7,7 +7,9 @@ function method(owner,name,desc,seen=new Set()){if(seen.has(owner))return null;s
 function m(owner,name,desc){const f=method(owner,name,desc);if(!f)throw new Error(`Missing method ${owner}.${name} ${desc||''}`);checks++;return f;}
 const legacy=p['draw.mode']==='legacy',pose=p['draw.mode']==='pose',mc=p['mc.class'],screen=p['screen.class'],tex=p['texture.id.class'],native=p['texture.native.class'];
 for(const k of Object.keys(p).filter(k=>k.endsWith('.class')))cls(p[k]);
-for(const part of ['hud','fps','particle','keyboard'])if(p[part+'.class'])m(p[part+'.class'],p[part+'.method'],p[part+'.desc']);
+for(const part of ['hud','fps','particle','keyboard','turn','camera'])if(p[part+'.class'])m(p[part+'.class'],p[part+'.method'],p[part+'.desc']);
+for(const key of ['yaw','pitch','prevYaw','prevPitch'])field(p['entity.class'],p['entity.'+key],'F');
+m(p['food.player.class'],p['food.get'],'()L'+p['food.class']+';');m(p['food.class'],p['food.level'],'()I');m(p['food.class'],p['food.saturation'],'()F');
 m(mc,p['mc.instance'],'()L'+mc+';');const options=field(mc,p['mc.options']).desc.slice(1,-1);field(options,p['hide.field'],'Z');field(mc,p['mc.font']);field(mc,p['mc.player']);field(mc,p['mc.screen'],'L'+screen+';');m(mc,p['mc.setScreen'],'(L'+screen+';)V');if(p['mc.fps.field'])field(mc,p['mc.fps.field'],'I');else m(mc,p['mc.fps.method'],'()I');if(!legacy)m(mc,p['mc.focus'],'()Z');
 for(const k of ['width','height'])field(screen,p['screen.'+k],'I');
 for(const part of ['render','click','key','pause','closed'])m(screen,p['screen.'+part],p['screen.'+part+'.desc']||(part==='closed'?'()V':'()Z'));

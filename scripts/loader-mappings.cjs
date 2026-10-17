@@ -42,10 +42,14 @@ function remap(p, index, map) {
   }
   const mc=p['mc.class'], screen=p['screen.class'], id=p['texture.id.class'], manager=p['texture.manager.class'];
   const legacy=p['draw.mode']==='legacy', pose=p['draw.mode']==='pose';
-  for(const hook of ['hud','fps','particle','keyboard']) if(p[hook+'.class']) member(hook+'.method',p[hook+'.class'],p[hook+'.desc']);
+  for(const hook of ['hud','fps','particle','keyboard','turn','camera']) if(p[hook+'.class']) member(hook+'.method',p[hook+'.class'],p[hook+'.desc']);
   member('mc.instance',mc,`()L${mc};`);
   for(const key of ['font','player','screen','fps.field']) member('mc.'+key,mc,null,'f');
   const options=member('mc.options',mc,null,'f'); member('hide.field',options.desc.slice(1,-1),'Z','f');
+  member('camera.option', options.desc.slice(1,-1), null, 'f');
+  for(const key of ['yaw','pitch','prevYaw','prevPitch']) member('entity.'+key,p['entity.class'],'F','f');
+  member('food.get',p['food.player.class'],`()L${p['food.class']};`);
+  member('food.level',p['food.class'],'()I'); member('food.saturation',p['food.class'],'()F');
   member('mc.fps.method',mc,'()I'); if(!legacy) member('mc.focus',mc,'()Z');
   member('mc.setScreen',mc,`(L${screen};)V`);
   for(const key of ['width','height']) member('screen.'+key,screen,'I','f');

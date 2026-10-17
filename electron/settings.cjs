@@ -6,7 +6,7 @@ const defaults = {
   width: 1280, height: 720, fullscreen: false, downloadThreads: 8,
   verifyFiles: false, minimizeOnLaunch: true, restoreAfterGame: true,
   reducedMotion: false, accent: 'pink', launchMode: 'performance',
-  backgroundFps: 30, particleDistance: 24, autoCheckUpdates: true, discordPresence: true,
+  menuScale: 75, backgroundFps: 30, particleDistance: 24, autoCheckUpdates: true, discordPresence: true,
   startupAnimation: true, showNews: true, outputAutoOpen: false, outputHeight: 250, outputFontSize: 11, skinAutoRotate: false,
 };
 function validateSettings(current, patch, maxMemory) {
@@ -16,8 +16,8 @@ function validateSettings(current, patch, maxMemory) {
     if (!Object.hasOwn(defaults, key)) continue;
     if (['fullscreen', 'verifyFiles', 'minimizeOnLaunch', 'restoreAfterGame', 'reducedMotion', 'autoCheckUpdates', 'discordPresence', 'startupAnimation', 'showNews', 'outputAutoOpen', 'skinAutoRotate'].includes(key)) {
       if (typeof value !== 'boolean') throw new Error(`Invalid ${key} setting.`);
-    } else if (['memory', 'width', 'height', 'downloadThreads', 'backgroundFps', 'particleDistance', 'outputHeight', 'outputFontSize'].includes(key)) {
-      const bounds = { memory: [2, maxMemory], width: [640, 7680], height: [480, 4320], downloadThreads: [1, 16], backgroundFps: [5, 60], particleDistance: [8, 64], outputHeight: [120, 550], outputFontSize: [9, 16] }[key];
+    } else if (['memory', 'width', 'height', 'downloadThreads', 'backgroundFps', 'particleDistance', 'outputHeight', 'outputFontSize', 'menuScale'].includes(key)) {
+      const bounds = { menuScale: [60,95], memory: [2, maxMemory], width: [640, 7680], height: [480, 4320], downloadThreads: [1, 16], backgroundFps: [5, 60], particleDistance: [8, 64], outputHeight: [120, 550], outputFontSize: [9, 16] }[key];
       if (!Number.isInteger(value) || value < bounds[0] || value > bounds[1]) throw new Error(`Choose ${key} between ${bounds[0]} and ${bounds[1]}.`);
     }
     else if (key === 'accountMode' && !['microsoft','local'].includes(value)) throw new Error('Choose Microsoft or local testing.');

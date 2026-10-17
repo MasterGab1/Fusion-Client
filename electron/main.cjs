@@ -46,6 +46,7 @@ const links = {
   news: 'https://www.minecraft.net/en-us/articles',
   account: 'https://www.minecraft.net/en-us/msaprofile',
   releases: `${REPOSITORY}/releases`,
+  contact: 'https://github.com/MasterGab1',
 };
 function emit(type, data) {
   if (type === 'game-started') presence?.setGame(data.version);
@@ -124,7 +125,7 @@ async function setup() {
     if (!uiOnly && (launcher.busy || launcher.running || signingIn || applyingSkin || community.busy || packs.busy)) throw new Error('Wait for the current account, download or game operation to finish before changing settings.');
     if (!patch || typeof patch !== 'object') throw new Error('Invalid settings.');
     const next = validateSettings(settings, patch, maxMemory);
-    const limits = Object.fromEntries(['backgroundFps', 'particleDistance'].filter(key => next[key] !== settings[key]).map(key => [key, next[key]]));
+    const limits = Object.fromEntries(['backgroundFps', 'particleDistance', 'menuScale'].filter(key => next[key] !== settings[key]).map(key => [key, next[key]]));
     if (Object.keys(limits).length) await mods.updateLimits(limits);
     await atomicWrite(settingsPath, JSON.stringify(next, null, 2));
     settings = next;

@@ -51,13 +51,13 @@ function relocate(bytes) {
   await fs.copyFile(path.join(root, 'public/assets/INTER-LICENSE.txt'), path.join(classes, 'INTER-LICENSE.txt'));
 
   const manifest = path.join(root, 'build/runtime-manifest.mf');
-  await fs.writeFile(manifest, 'Manifest-Version: 1.0\nPremain-Class: fusion.runtime.FusionAgent\nImplementation-Title: Fusion Runtime\nImplementation-Version: 0.5.0\n\n');
+  await fs.writeFile(manifest, 'Manifest-Version: 1.0\nPremain-Class: fusion.runtime.FusionAgent\nImplementation-Title: Fusion Runtime\nImplementation-Version: 0.6.0\n\n');
   const output = path.join(root, 'electron/runtime'); await fs.mkdir(output, { recursive: true });
   const jar = path.join(output, 'fusion-runtime.jar');
   execFileSync('jar', ['--create', '--file', jar, '--manifest', manifest, '-C', classes, '.'], { windowsHide: true, stdio: 'inherit' });
   const bytes = await fs.readFile(jar);
   const loaders = {};
   for (const loader of ['fabric', 'forge']) loaders[loader] = (await fs.readdir(path.join(root, 'runtime/loader-profiles', loader))).filter(f => f.endsWith('.properties')).map(f => f.replace('.properties', ''));
-  await fs.writeFile(path.join(output, 'manifest.json'), JSON.stringify({ version: '0.5.0', loaders, sha512: createHash('sha512').update(bytes).digest('hex'), versions: (await fs.readdir(path.join(root, 'runtime/profiles'))).filter(f => f.endsWith('.properties')).map(f => f.replace('.properties', '')) }, null, 2));
+  await fs.writeFile(path.join(output, 'manifest.json'), JSON.stringify({ version: '0.6.0', loaders, sha512: createHash('sha512').update(bytes).digest('hex'), versions: (await fs.readdir(path.join(root, 'runtime/profiles'))).filter(f => f.endsWith('.properties')).map(f => f.replace('.properties', '')) }, null, 2));
   console.log(`Built Fusion Runtime: ${bytes.length} bytes, release profiles generated.`);
 })().catch(error => { console.error(error); process.exitCode = 1; });

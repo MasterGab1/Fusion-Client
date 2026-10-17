@@ -36,6 +36,7 @@ final class GuiAdapter {
         constructor = new ScreenLoader(screen.getClassLoader()).define(screenBytes(p, legacy)).getConstructor(Object.class);
     }
     boolean hasScreen(Object mc) throws Exception { return currentScreen.get(mc) != null; }
+    Object screen(Object mc) throws Exception { return currentScreen.get(mc); }
     void open(Object mc) throws Exception { setScreen.invoke(mc, constructor.newInstance(title)); System.out.println("[Fusion] Mod menu opened"); }
     void close() throws Exception { setScreen.invoke(game.minecraft(), new Object[] { null }); }
     int width(Object screen) throws Exception { return width.getInt(screen); }

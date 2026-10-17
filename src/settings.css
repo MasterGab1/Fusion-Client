@@ -4,3 +4,4 @@
 .app-shell[data-accent]:not([data-accent=pink]) .quick-active,.app-shell[data-accent]:not([data-accent=pink]) .selected-mark{background:var(--accent)}
 .app-shell .memory-control input{accent-color:var(--accent)}
 .switch:focus-visible,.expanded-settings select:focus-visible,.resolution-inputs input:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.legal-page{max-width:850px;margin:0 auto}.legal-page>article{padding:22px 26px;margin-top:16px;background:var(--surface,#191b21);border:1px solid var(--border,#30323a);border-radius:12px}.legal-page h2{font-size:22px;margin:0 0 12px}.legal-page h3{font-size:14px;margin:24px 0 9px}.legal-page p{font-size:12px;color:var(--muted,#adb0bd);line-height:1.85;margin:0 0 13px}.legal-page .settings-segments button[aria-pressed=true]{background:var(--accent);color:#101116}

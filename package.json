@@ -1,8 +1,8 @@
 {
   "name": "fusion-launcher",
   "productName": "Fusion Launcher",
-  "version": "0.12.0",
-  "description": "Minecraft Java desktop launcher with modpacks and local testing profiles",
+  "version": "0.13.0",
+  "description": "Minecraft Java launcher with in-game controls, mods and modpacks",
   "author": "Fusion",
   "private": true,
   "main": "electron/main.cjs",
@@ -12,7 +12,7 @@
     "build": "node scripts/build-runtime.cjs && node scripts/assets.cjs && vite build && node scripts/build-uninstaller.cjs",
     "dist": "npm run build && electron-builder --win nsis --x64 --publish never && node scripts/build-installer.cjs && npm run release:prepare",
     "test": "node --test tests/*.test.cjs",
-    "test:ui": "node scripts/smoke-persistence.cjs && node scripts/smoke-v011.cjs && node scripts/smoke-v012.cjs",
+    "test:ui": "node scripts/smoke-persistence.cjs && node scripts/smoke-v011.cjs && node scripts/smoke-v012.cjs && node scripts/smoke-v013.cjs",
     "dist:portable": "npm run build && electron-builder --win portable --x64",
     "build:mods": "node scripts/build-runtime.cjs",
     "test:mods": "node scripts/test-runtime.cjs",
@@ -62,7 +62,10 @@
       "electron/**/*",
       "package.json",
       "docs/UPDATES.md",
-      "docs/MICROSOFT-SETUP.md"
+      "docs/MICROSOFT-SETUP.md",
+      "LICENSE",
+      "docs/PRIVACY.md",
+      "docs/TERMS.md"
     ],
     "asar": true,
     "win": {

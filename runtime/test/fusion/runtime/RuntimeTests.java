@@ -3,6 +3,7 @@ import java.util.Properties;
 public final class RuntimeTests {
     private static void check(boolean condition) { if (!condition) throw new AssertionError(); }
     public static void main(String[] args) throws Exception {
+        FreeLookTests.run();
         check(BackgroundFpsMod.cappedLimit(144, 30, false) == 30);
         check(BackgroundFpsMod.cappedLimit(15, 30, false) == 15);
         check(BackgroundFpsMod.cappedLimit(144, 30, true) == 144);
@@ -16,9 +17,11 @@ public final class RuntimeTests {
         java.nio.file.Path file = java.nio.file.Files.createTempFile("fusion-runtime", ".properties");
         try {
             System.setProperty("fusion.config", file.toString());
+            check(ClientFeatures.clampPitch(110) == 90 && ClientFeatures.clampPitch(-110) == -90);
+            config.menuScale = 65; config.freelook = true; config.saturation = true;
             config.backgroundFps = 15; config.particles = false; config.save();
             RuntimeConfig restored = RuntimeConfig.load();
-            check(restored.backgroundFps == 15 && !restored.particles && !restored.watermark);
+            check(restored.menuScale == 65 && restored.freelook && restored.saturation && restored.backgroundFps == 15 && !restored.particles && !restored.watermark);
         } finally { java.nio.file.Files.deleteIfExists(file); System.clearProperty("fusion.config"); }
         System.out.println("PASS: background FPS restore/caps, particle radius boundaries, bounded configuration and in-game persistence.");
     }

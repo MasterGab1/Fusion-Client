@@ -22,7 +22,7 @@ public final class RuntimeBootstrap {
                 if (name == null) return null;
                 if (loaderKind.equals("fabric") && name.equals("net/fabricmc/loader/impl/launch/knot/KnotClassLoader")) return parentBridge(bytes);
                 String target = null;
-                for (String key : new String[] { "hud", "fps", "particle", "keyboard" }) if (name.equals(profile.getProperty(key + ".class"))) target = key;
+                for (String key : new String[] { "hud", "fps", "particle", "keyboard", "turn", "camera" }) if (name.equals(profile.getProperty(key + ".class"))) target = key;
                 if (loaderKind.equals("forge") && (name.equals("net/minecraftforge/client/GuiIngameForge") || name.equals("net/minecraftforge/client/gui/ForgeIngameGui") || name.equals("net/minecraftforge/client/gui/overlay/ForgeGui"))) target = "hud";
                 if (target == null) return null;
                 Hooks.bindLoader(loader);
@@ -50,6 +50,17 @@ public final class RuntimeBootstrap {
                             return new MethodVisitor(Opcodes.ASM9, original) {
                                 @Override public void visitCode() {
                                     super.visitCode();
+                                    if(hook.equals("turn")){
+                                        boolean legacy=profile.getProperty("turn.desc").equals("(FF)V");
+                                        super.visitVarInsn(Opcodes.ALOAD,0);
+                                        super.visitVarInsn(legacy?Opcodes.FLOAD:Opcodes.DLOAD,1);if(legacy)super.visitInsn(Opcodes.F2D);
+                                        super.visitVarInsn(legacy?Opcodes.FLOAD:Opcodes.DLOAD,legacy?2:3);if(legacy)super.visitInsn(Opcodes.F2D);
+                                        super.visitMethodInsn(Opcodes.INVOKESTATIC,"fusion/runtime/Hooks","turn","(Ljava/lang/Object;DD)Z",false);
+                                        Label normal=new Label();super.visitJumpInsn(Opcodes.IFEQ,normal);super.visitInsn(Opcodes.RETURN);super.visitLabel(normal);super.visitFrame(Opcodes.F_SAME,0,null,0,null);
+                                    }
+                                    if(hook.equals("camera")&&!profile.getProperty("draw.mode").equals("legacy")){
+                                        for(int i=1;i<=2;i++){super.visitVarInsn(Opcodes.FLOAD,i);super.visitMethodInsn(Opcodes.INVOKESTATIC,"fusion/runtime/Hooks",i==1?"cameraYaw":"cameraPitch","(F)F",false);super.visitVarInsn(Opcodes.FSTORE,i);}
+                                    }
                                     if (hook.equals("keyboard")) {
                                         if (profile.containsKey("input.key.class")) {
                                             super.visitVarInsn(Opcodes.ALOAD, 4);
@@ -63,6 +74,14 @@ public final class RuntimeBootstrap {
                                         super.visitMethodInsn(Opcodes.INVOKESTATIC, "fusion/runtime/Hooks", "beginHud", "(Ljava/lang/Object;)V", false);
                                     }
                                     if (hook.equals("particle")) { super.visitVarInsn(Opcodes.ALOAD, 1); super.visitMethodInsn(Opcodes.INVOKESTATIC, "fusion/runtime/Hooks", "particle", "(Ljava/lang/Object;)V", false); }
+                                }
+                                @Override public void visitFieldInsn(int opcode,String owner,String name,String desc){
+                                    super.visitFieldInsn(opcode,owner,name,desc);
+                                    if(hook.equals("camera")&&profile.getProperty("draw.mode").equals("legacy")&&opcode==Opcodes.GETFIELD&&owner.equals(profile.getProperty("entity.class"))&&desc.equals("F")){
+                                        boolean yaw=name.equals(profile.getProperty("entity.yaw"))||name.equals(profile.getProperty("entity.prevYaw"));
+                                        boolean pitch=name.equals(profile.getProperty("entity.pitch"))||name.equals(profile.getProperty("entity.prevPitch"));
+                                        if(yaw||pitch)super.visitMethodInsn(Opcodes.INVOKESTATIC,"fusion/runtime/Hooks",yaw?"cameraYaw":"cameraPitch","(F)F",false);
+                                    }
                                 }
                                 @Override public void visitInsn(int opcode) {
                                     if (hook.equals("hud") && opcode == Opcodes.RETURN) {
@@ -82,7 +101,7 @@ public final class RuntimeBootstrap {
                 } catch (Throwable error) { System.err.println("[Fusion] Could not install " + hook + ": " + error); return null; }
             }
         });
-        System.out.println("[Fusion] Runtime 0.5.0 loaded for Minecraft " + version);
+        System.out.println("[Fusion] Runtime 0.6.0 loaded for Minecraft " + version);
     }
     private static byte[] parentBridge(byte[] bytes) {
         ClassReader reader = new ClassReader(bytes);

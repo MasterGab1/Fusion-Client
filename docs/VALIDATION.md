@@ -1,3 +1,14 @@
+## 0.13 in-game controls, output and update setup — 17 October 2026
+
+- The final packaged ASAR passes the hidden 0.13 UI checks. Its runtime 0.6.0 JAR matches the packaged manifest, legal documents are included, and the custom installer matches the release metadata size and SHA-512. Installer SHA-256: `ae67fd4064aa626c1e81023d423f9471ca1557e39bfc312509a8b69e704e6397`.
+- 60 Node tests pass. New output tests cover fragmented UTF-8/XML, severity, bounded malformed entries, token redaction and retained exception details. Existing vanilla installation folders now also receive Fusion's runtime without being moved.
+- Runtime 0.6.0 retains 49 vanilla, 36 Fabric and 39 Forge mappings. All 49 static mapping audits and JVM screen/hook verification checks pass, including the new turn/camera targets. Real Fabric 1.20.1 with community mods and Forge 1.8.9 prelaunch probes pass before a game window opens.
+- Runtime tests cover free-look camera state without changing player aim, pitch limits, perspective restoration on key release/disable/menu or focus loss/disconnect, configuration persistence, overlay hit regions and rendering. The compact panel and saved menu-size controls were visually reviewed.
+- Hidden Electron checks pass for the existing settings/modpack/theme flows plus menu-size persistence, seven built-in switches, legal tabs, parsed colored output and minimum-size settings. The launcher handoff remains available; the redundant loader selector and in-game Esc footer were removed.
+- Isolated WPF/mock-engine tests pass for the custom update path, including an older updater's /S --updated request, extraction verification, spaced paths, failure/retry and custom uninstaller data preservation. No installed launcher was replaced or uninstalled during QA.
+- Current-source and seven-commit text scans found no matching credential patterns or personal Windows paths. Visual review found a username in the old installer screenshot; the current screenshot now uses a generic folder label. The owner requested current-file cleanup only, so Git history is deliberately unchanged. Unused backgrounds and old QA screenshots were removed, required assets/licenses retained, and publishing has a repeatable pattern scan. These checks are not a guarantee of absence of sensitive information.
+- Saturation is explicitly a client estimate. Actual GPU rendering and free-look feel in running gameplay, arbitrary mod combinations, modern Forge gameplay, Microsoft account acceptance and every supported release remain outside these automated checks. No performance gain is claimed from measurements.
+
 ## 0.12 local testing, modpacks and startup theme — 16 October 2026
 
 - 57 Node tests pass. New checks cover deterministic local player UUIDs, explicit mode selection, launch options without Microsoft calls, modpack path/host restrictions, client/server file rules, layered configuration, checksum rejection and isolated atomic installation.

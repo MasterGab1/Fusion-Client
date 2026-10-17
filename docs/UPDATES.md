@@ -12,7 +12,7 @@ git credential-manager github login --username MasterGab1 --browser
 
 Git for Windows must be installed and available on PATH. Fusion reads the existing credential from Git Credential Manager without opening a prompt and passes it only to the updater in memory. It never writes it to settings, logs, the renderer, or release metadata. If access expires, repeat the command. Developer-managed environments can instead supply `FUSION_GITHUB_TOKEN` at runtime; never set it in a build configuration or commit it.
 
-Open **Updates → Check for updates → Download update → Restart to install**. Future updates preserve worlds, profiles, skins, settings and custom backgrounds. Close Minecraft before installing an update. The custom installer forwards silent-update flags to the NSIS installation engine.
+Open **Updates → Check for updates → Download update → Restart to install**. Future updates preserve worlds, profiles, skins, settings and custom backgrounds. Close Minecraft before installing an update. The custom Fusion update screen shows progress, then reopens the launcher. Updates from older builds also use this screen. The underlying installation engine runs without its own wizard.
 
 Everyone using this private feed needs repository access and local GitHub credentials. For distribution to players without source access, use a separate public release repository or an authenticated distribution service. Making source private alone does not create public access to installer downloads.
 

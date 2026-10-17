@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Cpu, Eye, Moon, Sparkles, RefreshCw, LoaderCircle, ChevronRight, AlertCircle } from 'lucide-react';
+import { Check, Cpu, Eye, Moon, Sparkles, RefreshCw, LoaderCircle, ChevronRight, AlertCircle, Utensils, Move, Gauge, MapPin } from 'lucide-react';
 import './mods.css';
 const api = window.fusion;
-const icons = { watermark: Eye, focus: Moon, particles: Sparkles };
+const icons = { watermark: Eye, focus: Moon, particles: Sparkles, saturation: Utensils, freelook: Move, fps: Gauge, coordinates: MapPin };
 async function call(promise) { const result = await promise; if (!result.ok) throw new Error(result.error); return result.value; }
 export default function Mods({ version, settings, busy, onSettings, chooseVersion }) {
   const [catalog, setCatalog] = useState(null), [pending, setPending] = useState(false), [error, setError] = useState('');

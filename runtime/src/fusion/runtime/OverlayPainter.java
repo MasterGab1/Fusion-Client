@@ -16,21 +16,19 @@ final class OverlayPainter {
         try (InputStream in = getClass().getResourceAsStream("/Inter-Semibold.ttf")) { semibold = Font.createFont(Font.TRUETYPE_FONT, in); }
         try (InputStream in = getClass().getResourceAsStream("/logo-white.png")) { logo = ImageIO.read(in); }
     }
-    static int[] visible(int category) { return category == 3 ? new int[0] : category == 1 ? new int[] { 0 } : category == 2 ? new int[] { 1, 2 } : new int[] { 0, 1, 2 }; }
+    static int[] visible(int category) { return category == 4 ? new int[0] : category == 1 ? new int[] {0,3,5,6} : category == 2 ? new int[] {1,2} : category == 3 ? new int[] {4} : new int[] {0,1,2,3,4,5,6}; }
     static boolean hit(double x, double y, int left, int top, int w, int h) { return x >= left && y >= top && x < left + w && y < top + h; }
     // Stable control IDs also drive hover repainting and mouse hit testing.
     static int control(double x, double y, int category) {
-        if (hit(x, y, 752, 20, 28, 28) || hit(x, y, 642, 452, 130, 30)) return 1;
-        for (int i = 0; i < 4; i++) if (hit(x, y, 12, 87 + i * 52, 36, 36)) return 10 + i;
-        if(category==3){if(hit(x,y,644,401,58,25))return 50;if(hit(x,y,710,401,62,25))return 51;}
-        int index = 0;
-        for (int id : visible(category)) {
-            int cy = 150 + index++ * 86;
-            if (hit(x, y, 714, cy + 18, 38, 24)) return 20 + id;
-            if (id > 0) {
-                if (hit(x, y, 542, cy + 23, 26, 28)) return 30 + id;
-                if (hit(x, y, 656, cy + 23, 26, 28)) return 40 + id;
-            }
+        if (hit(x,y,752,20,28,28)) return 1;
+        for(int i=0;i<5;i++) if(hit(x,y,12,87+i*52,36,36)) return 10+i;
+        if(hit(x,y,626,455,28,26))return 60; if(hit(x,y,744,455,28,26))return 61;
+        if(category==4){if(hit(x,y,644,401,58,25))return 50;if(hit(x,y,710,401,62,25))return 51;}
+        int n=0;
+        for(int id:visible(category)) {
+            int cx=84+(n%2)*350,cy=126+(n/2)*78;n++;
+            if(hit(x,y,cx+290,cy+10,34,22))return 20+id;
+            if(id==1||id==2){if(hit(x,y,cx+194,cy+40,26,22))return 30+id;if(hit(x,y,cx+298,cy+40,26,22))return 40+id;}
         }
         return 0;
     }
@@ -48,6 +46,11 @@ final class OverlayPainter {
         else if (id == 1) { p.draw(new RoundRectangle2D.Float(1, 3, 21, 15, 3, 3)); p.drawLine(8, 22, 16, 22); p.drawLine(12, 18, 12, 22); }
         else if (id == 2) { p.draw(new RoundRectangle2D.Float(5, 5, 14, 14, 3, 3)); p.drawRect(9, 9, 6, 6); for (int v = 8; v <= 16; v += 4) { p.drawLine(v, 1, v, 5); p.drawLine(v, 19, v, 23); p.drawLine(1, v, 5, v); p.drawLine(19, v, 23, v); } }
         else if (id == 3) { Path2D moon = new Path2D.Float(); moon.moveTo(16, 2); moon.curveTo(2, -1, -1, 18, 12, 22); moon.curveTo(18, 24, 23, 20, 23, 15); moon.curveTo(14, 18, 9, 9, 16, 2); p.draw(moon); }
+        else if(id==5){for(int n=0;n<3;n++){int yy=5+n*7;p.drawLine(2,yy,22,yy);p.fillOval(n==1?14:6,yy-3,6,6);}}
+        else if(id==6){p.drawLine(6,2,6,21);p.drawLine(2,2,2,8);p.drawLine(10,2,10,8);p.draw(new Arc2D.Float(2,5,8,7,180,180,Arc2D.OPEN));p.drawLine(19,2,19,21);p.draw(new Arc2D.Float(13,2,12,12,90,180,Arc2D.OPEN));}
+        else if(id==7){Path2D eye=new Path2D.Float();eye.moveTo(1,12);eye.curveTo(7,1,17,1,23,12);eye.curveTo(17,23,7,23,1,12);p.draw(eye);p.drawOval(8,8,8,8);}
+        else if(id==8){p.draw(new Arc2D.Float(2,3,20,20,0,180,Arc2D.OPEN));p.drawLine(2,13,2,19);p.drawLine(22,13,22,19);p.drawLine(12,14,17,7);p.fillOval(10,12,4,4);}
+        else if(id==9){p.drawOval(3,3,18,18);p.drawLine(12,0,12,7);p.drawLine(12,17,12,24);p.drawLine(0,12,7,12);p.drawLine(17,12,24,12);p.fillOval(10,10,4,4);}
         else { Path2D star = new Path2D.Float(); star.moveTo(11, 2); star.lineTo(14, 9); star.lineTo(21, 12); star.lineTo(14, 15); star.lineTo(11, 22); star.lineTo(8, 15); star.lineTo(1, 12); star.lineTo(8, 9); star.closePath(); p.draw(star); p.drawLine(21, 1, 21, 6); p.drawLine(18, 3, 24, 3); }
         p.dispose();
     }
@@ -69,15 +72,15 @@ final class OverlayPainter {
             text(g, "MINECRAFT " + version, 10, true, 575, 36, muted);
             if (hover == 1) round(g, 752, 20, 28, 28, 8, card);
             g.setStroke(new BasicStroke(1.5f)); line(g, 761, 29, 771, 39, muted); line(g, 771, 29, 761, 39, muted);
-            String[] categories = { "Fusion", "HUD", "Performance", "Installed mods" };
-            for (int i = 0; i < 4; i++) {
+            String[] categories = { "Mods", "HUD", "Performance", "Controls", "Installed mods" };
+            for (int i = 0; i < 5; i++) {
                 if (category == i || hover == 10 + i) round(g, 12, 87 + i * 52, 36, 36, 10, category == i ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 28) : card);
                 if (category == i) round(g, 1, 96 + i * 52, 3, 18, 3, accent);
-                icon(g, i, 18, 93 + i * 52, category == i ? accent : muted);
+                icon(g, i==3?5:i==4?0:i, 18, 93 + i * 52, category == i ? accent : muted);
             }
-            text(g, category == 0 ? "Mods" : categories[category], 25, true, 84, 110, white);
-            text(g, category==3 ? config.mods.length+" third-party mods · manage downloads in the launcher" : "Your settings apply immediately", 11, false, 84, 131, muted);
-            if(category==3){
+            text(g, category == 0 ? "Mods" : categories[category], 25, true, 84, 94, white);
+            text(g, category==4 ? config.mods.length+" installed mods" : "HUD, controls and performance", 11, false, 84, 114, muted);
+            if(category==4){
                 int start=config.modPage*5;
                 for(int i=start;i<Math.min(start+5,config.mods.length);i++){
                     int cy=150+(i-start)*49;round(g,84,cy,688,42,9,card);icon(g,0,99,cy+9,muted);
@@ -88,35 +91,35 @@ final class OverlayPainter {
                 text(g,"Page "+(config.modPage+1)+" / "+Math.max(1,(config.mods.length+4)/5),11,false,84,419,muted);
                 round(g,644,401,58,25,7,card);round(g,710,401,62,25,7,card);text(g,"Previous",10,false,651,418,muted);text(g,"Next",10,false,728,418,muted);
             }
-            String[] titles = { "Menu logo", "Background FPS", "Particle distance" };
-            String[] descriptions = { "Fusion branding inside this menu only", "Lower the frame rate when you switch apps", "Expire particles beyond the selected distance" };
-            int index = 0;
-            for (int id : visible(category)) {
-                int cy = 150 + index++ * 86;
-                boolean on = id == 0 ? config.watermark : id == 1 ? config.focus : config.particles;
-                round(g, 84, cy, 688, 74, 12, card);
-                g.setColor(border);g.draw(new RoundRectangle2D.Float(84,cy,688,74,12,12));
-                round(g,100,cy+17,40,40,10,color(0x242a35));icon(g,id==0?1:id==1?3:4,108,cy+25,on?accent:muted);
-                text(g,titles[id],14,true,154,cy+30,white);
-                text(g,descriptions[id],10,false,154,cy+49,muted);
-                round(g,714,cy+25,38,22,22,on?accent:color(0x434953));
-                g.setColor(on?bg:muted);g.fillOval(on?733:717,cy+28,16,16);
-                if(hover==20+id){g.setColor(white);g.draw(new RoundRectangle2D.Float(712,cy+23,42,26,26,26));}
-                if(id>0){
-                    round(g,534,cy+17,156,40,8,color(0x11151c));
-                    round(g,542,cy+23,26,28,6,hover==30+id?color(0x343b48):color(0x222833));
-                    round(g,656,cy+23,26,28,6,hover==40+id?color(0x343b48):color(0x222833));
-                    text(g,"−",16,false,550,cy+42,white);text(g,"+",16,false,663,cy+42,white);
+            String[] titles = { "Watermark", "Background FPS", "Particles", "Saturation", "Free look", "FPS counter", "Coordinates" };
+            String[] hints = { "Visible in menus only", "When the game is unfocused", "Limit distant particles", "Client estimate, not server-verified", "Hold Left Alt to look around", "Your current frame rate", "Your position in the world" };
+            boolean[] enabled = { config.watermark, config.focus, config.particles, config.saturation, config.freelook, config.fps, config.coordinates };
+            int index=0;
+            for(int id:visible(category)) {
+                int cx=84+(index%2)*350,cy=126+(index/2)*78; index++;
+                boolean on=enabled[id];
+                round(g,cx,cy,338,70,10,card);
+                g.setColor(border);g.draw(new RoundRectangle2D.Float(cx,cy,338,70,10,10));
+                icon(g,new int[]{7,3,4,6,7,8,9}[id],cx+13,cy+12,on?accent:muted);
+                text(g,titles[id],13,true,cx+48,cy+26,white);
+                text(g,hints[id],9,false,cx+14,cy+57,muted);
+                round(g,cx+290,cy+10,34,20,20,on?accent:color(0x434953));
+                g.setColor(white);g.fillOval(cx+(on?306:293),cy+13,14,14);
+                if(hover==20+id){g.setColor(white);g.draw(new RoundRectangle2D.Float(cx+288,cy+8,38,24,24,24));}
+                if(id==1||id==2){
+                    round(g,cx+190,cy+38,136,26,6,bg);
+                    text(g,"−",14,true,cx+200,cy+56,hover==30+id?accent:white);text(g,"+",14,true,cx+306,cy+56,hover==40+id?accent:white);
                     String value=id==1?config.backgroundFps+" FPS":config.particleDistance+" blocks";
-                    g.setFont(semibold.deriveFont(11f));int valueWidth=g.getFontMetrics().stringWidth(value);
-                    text(g,value,11,true,612-valueWidth/2,cy+41,white);
+                    text(g,value,10,true,cx+228,cy+56,white);
                 }
             }
-            line(g, 60, 438, 799, 438, border);
-            text(g, message == null ? "Changes save automatically" : message, 11, false, 84, 471, muted);
-            round(g, 642, 452, 130, 30, 8, hover == 1 ? color(0x34313a) : card);
-            round(g, 651, 458, 25, 18, 5, color(0x30323b)); text(g, "Esc", 9, true, 656, 471, muted); text(g, "Back to game", 11, true, 684, 472, white);
-            if (hover >= 10 && hover <= 13) { int y = 93 + (hover - 10) * 52; round(g, 55, y, 112, 25, 7, color(0x35313c)); text(g, categories[hover - 10], 11, true, 66, y + 17, white); }
+            line(g,60,446,799,446,border);
+            text(g,message==null?"Saved automatically":message,10,false,84,472,muted);
+            text(g,"MENU SIZE",9,true,537,472,muted);
+            round(g,626,455,28,26,6,card);round(g,744,455,28,26,6,card);
+            text(g,"−",16,true,635,474,hover==60?accent:white);text(g,"+",16,true,753,474,hover==61?accent:white);
+            text(g,config.menuScale+"%",12,true,681,474,white);
+            if (hover >= 10 && hover <= 14) { int y = 93 + (hover - 10) * 52; round(g, 55, y, 112, 25, 7, color(0x35313c)); text(g, categories[hover - 10], 11, true, 66, y + 17, white); }
         } finally { g.dispose(); }
         return image;
     }

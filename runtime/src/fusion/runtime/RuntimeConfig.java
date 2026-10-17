@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.Properties;
 
 public final class RuntimeConfig {
-    public volatile boolean watermark, focus, particles;
-    public volatile int backgroundFps, particleDistance;
+    public volatile boolean watermark, focus, particles, saturation, freelook, fps, coordinates;
+    public volatile int backgroundFps, particleDistance, menuScale;
     public final String accent;
     public final String[] mods;
     public int modPage;
@@ -13,6 +13,11 @@ public final class RuntimeConfig {
         watermark = Boolean.parseBoolean(p.getProperty("watermark", "true"));
         focus = Boolean.parseBoolean(p.getProperty("focus", "true"));
         particles = Boolean.parseBoolean(p.getProperty("particles", "true"));
+        saturation = Boolean.parseBoolean(p.getProperty("saturation", "false"));
+        freelook = Boolean.parseBoolean(p.getProperty("freelook", "false"));
+        fps = Boolean.parseBoolean(p.getProperty("fps", "false"));
+        coordinates = Boolean.parseBoolean(p.getProperty("coordinates", "false"));
+        menuScale = bounded(p, "menuScale", 75, 60, 95);
         String selected = p.getProperty("accent", "pink"); accent = selected.equals("blue") || selected.equals("violet") || selected.equals("orange") || selected.equals("green") ? selected : "pink";
         backgroundFps = bounded(p, "backgroundFps", 30, 5, 60);
         particleDistance = bounded(p, "particleDistance", 24, 8, 64);
@@ -37,6 +42,9 @@ public final class RuntimeConfig {
         p.setProperty("watermark", Boolean.toString(watermark)); p.setProperty("focus", Boolean.toString(focus)); p.setProperty("particles", Boolean.toString(particles));
         p.setProperty("backgroundFps", Integer.toString(backgroundFps)); p.setProperty("particleDistance", Integer.toString(particleDistance));
         p.setProperty("accent", accent);
+        p.setProperty("menuScale", Integer.toString(menuScale));
+        p.setProperty("saturation", Boolean.toString(saturation)); p.setProperty("freelook", Boolean.toString(freelook));
+        p.setProperty("fps", Boolean.toString(fps)); p.setProperty("coordinates", Boolean.toString(coordinates));
         java.nio.file.Path target = java.nio.file.Paths.get(file), temp = java.nio.file.Paths.get(file + ".tmp");
         try (OutputStream out = java.nio.file.Files.newOutputStream(temp)) { p.store(out, "Fusion in-game settings"); }
         java.nio.file.Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);

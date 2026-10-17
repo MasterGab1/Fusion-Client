@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "loaders": {
     "fabric": [
       "1.16.1",
@@ -81,7 +81,7 @@
       "26.1"
     ]
   },
-  "sha512": "507d372de9ce41a40f67cdf948762e621a56b5821070af31f06be58c7e1d505fd76aa41aca868a61123c00a4711e1f2205e4b0a5761119711d89e32f970d9fc1",
+  "sha512": "e036ad7e825d02de6cf516e3781e3c5e98a1cde1c6c1524f26abda2968b67201c6159376c436b0b2b0b8fbbfdfdaf13972ce64816217dcc2e764c91a9a5ba3e8",
   "versions": [
     "1.12.1",
     "1.12.2",

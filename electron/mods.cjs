@@ -4,9 +4,13 @@ const { createHash } = require('node:crypto');
 const { familyOf } = require('./catalog.cjs');
 const runtime = require('./runtime/manifest.json');
 const PROJECTS = [
-  { id: 'watermark', name: 'Fusion HUD', description: 'White Fusion logo in the mods overlay. Hidden during gameplay.' },
-  { id: 'focus', name: 'Fusion Focus', description: 'Caps FPS while Minecraft is unfocused and restores the game limit on return.' },
-  { id: 'particles', name: 'Fusion Particles', description: 'Expires distant particles early to reduce ticking and drawing work.' },
+  { id: 'watermark', name: 'Watermark', description: 'A small logo in menus.' },
+  { id: 'focus', name: 'Background FPS', description: 'Save power when you switch apps.' },
+  { id: 'particles', name: 'Particles', description: 'Keep nearby effects, skip distant ones.' },
+  { id: 'saturation', name: 'Saturation', description: 'Hunger and a client saturation estimate.', defaultEnabled: false },
+  { id: 'freelook', name: 'Free look', description: 'Hold Left Alt to look around.', defaultEnabled: false },
+  { id: 'fps', name: 'FPS counter', description: 'Keep an eye on your frame rate.', defaultEnabled: false },
+  { id: 'coordinates', name: 'Coordinates', description: 'Know where you are.', defaultEnabled: false },
 ];
 function loaderFor(version) {
   if (!familyOf(version)) throw new Error('Unsupported Minecraft version.');
@@ -22,11 +26,12 @@ class ModService {
     for (const line of source.split(/\r?\n/)) {
       const accent = /^accent=(pink|blue|violet|orange|green)$/.exec(line.trim());
       if (accent) { values.accent = accent[1]; continue; }
-      const match = /^\s*(watermark|focus|particles|backgroundFps|particleDistance)\s*=\s*(true|false|\d+)\s*$/.exec(line);
+      const match = /^\s*(watermark|focus|particles|saturation|freelook|fps|coordinates|backgroundFps|particleDistance|menuScale)\s*=\s*(true|false|\d+)\s*$/.exec(line);
       if (!match) continue;
       const [, key, value] = match;
       if (PROJECTS.some(p => p.id === key) && /^(true|false)$/.test(value)) values[key] = value === 'true';
       else if (key === 'backgroundFps' && +value >= 5 && +value <= 60) values[key] = +value;
+      else if (key === 'menuScale' && +value >= 60 && +value <= 95) values[key] = +value;
       else if (key === 'particleDistance' && +value >= 8 && +value <= 64) values[key] = +value;
     }
     return values;
@@ -44,7 +49,7 @@ class ModService {
   }
   async preferences(version) {
     const saved = await fs.readFile(this.profileFile(version), 'utf8').then(JSON.parse).catch(() => ({}));
-    const enabled = saved.schema === 2 && Array.isArray(saved.enabled) ? saved.enabled : PROJECTS.map(p => p.id);
+    const enabled = saved.schema === 2 && Array.isArray(saved.enabled) ? saved.enabled : PROJECTS.filter(p => p.defaultEnabled !== false).map(p => p.id);
     const values = await this.runtimePreferences(version);
     return { schema: 2, enabled: PROJECTS.filter(p => values[p.id] ?? enabled.includes(p.id)).map(p => p.id) };
   }
@@ -75,7 +80,7 @@ class ModService {
     // location so existing in-game preferences migrate without losing any toggles.
     const config = this.configFile(version); await fs.mkdir(gamePath, { recursive: true });
     const previousConfig = await this.runtimePreferences(version, config);
-    await this.writeConfig(config, { ...Object.fromEntries(PROJECTS.map(p => [p.id, enabled.includes(p.id)])), backgroundFps: previousConfig.backgroundFps ?? settings.backgroundFps ?? 30, particleDistance: previousConfig.particleDistance ?? settings.particleDistance ?? 24, accent: ['pink', 'blue', 'violet', 'orange', 'green'].includes(settings.accent) ? settings.accent : 'pink' });
+    await this.writeConfig(config, { ...Object.fromEntries(PROJECTS.map(p => [p.id, enabled.includes(p.id)])), backgroundFps: previousConfig.backgroundFps ?? settings.backgroundFps ?? 30, menuScale: previousConfig.menuScale ?? settings.menuScale ?? 75, particleDistance: previousConfig.particleDistance ?? settings.particleDistance ?? 24, accent: ['pink', 'blue', 'violet', 'orange', 'green'].includes(settings.accent) ? settings.accent : 'pink' });
     const lockFile = path.join(gamePath, 'fusion-mods.json');
     const previous = await fs.readFile(lockFile, 'utf8').then(JSON.parse).catch(() => null);
     // Retire only JARs tracked by the previous third-party preset. Keep user files.

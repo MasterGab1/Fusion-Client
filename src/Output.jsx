@@ -13,6 +13,6 @@ export default function Output({ logs, clear, close, settings, save }) {
       onPointerCancel={()=>{drag.current=null;}}
       onKeyDown={e=>{if(['ArrowUp','ArrowDown','Home','End'].includes(e.key)){e.preventDefault();commit(limit(e.key==='Home'?120:e.key==='End'?550:height+(e.key==='ArrowUp'?20:-20)));}}}/>
     <header><h2>Output</h2><button className="quiet-button" onClick={clear}>Clear</button><button className="icon-button" aria-label="Close output" onClick={close}><X size={16}/></button></header>
-    <div className="logs-content">{logs.map((entry,i)=><div key={i} className={`log-line ${entry.level}`}><time>{new Date(entry.time).toLocaleTimeString('en-GB')}</time><span>{entry.message}</span></div>)}<div ref={end}/></div>
+    <div className="logs-content">{logs.map((entry,i)=><div key={i} className={`log-line ${entry.level}`}><time>{new Date(entry.time).toLocaleTimeString('en-GB')}</time><b className="log-level">{entry.level === 'game' ? 'GAME' : entry.level.toUpperCase()}</b><span>{entry.message}</span></div>)}<div ref={end}/></div>
   </section>;
 }
