@@ -16,7 +16,7 @@ Microsoft, Xbox and Minecraft services receive sign-in requests when you choose 
 
 Minecraft and Java download providers receive file requests. Modrinth receives mod and modpack searches and installation requests; selected packs may download from their declared supported hosts. Minecraft services receive player-name skin lookups and news requests. As with other internet connections, these providers can receive your IP address and request information. Their own privacy terms apply.
 
-GitHub receives update checks and downloads. For a private release, Fusion can obtain a GitHub credential from your local Git Credential Manager for the request. It is kept in memory and is not included in the launcher, settings, output, or release files.
+GitHub receives public update checks and downloads. This release does not need or read a GitHub credential for in-app updates.
 
 Discord Rich Presence is optional. When enabled, Fusion sends launcher/game activity, including the Minecraft version and elapsed time, to your running Discord client. Discord controls how that activity is shown. Turn it off in Settings → Launcher.
 

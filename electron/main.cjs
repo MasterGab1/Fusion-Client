@@ -110,7 +110,6 @@ async function setup() {
   launcher = new GameLauncher({ root, mods, community, auth, emit, log });
   const installed = app.isPackaged && require('node:fs').existsSync(path.join(path.dirname(process.execPath), 'Uninstall Fusion Launcher.exe'));
   updates = new UpdateService({ installed, version: app.getVersion(), emit: data => emit('update', data),
-    getToken: require('./github-credential.cjs').githubCredential,
     createUpdater: () => require('electron-updater').autoUpdater,
     blocked: () => launcher.busy || launcher.running || signingIn || applyingSkin || community.busy || packs.busy,
   });

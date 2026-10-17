@@ -1,6 +1,7 @@
 ## 0.13 in-game controls, output and update setup — 17 October 2026
 
-- The final packaged ASAR passes the hidden 0.13 UI checks. Its runtime 0.6.0 JAR matches the packaged manifest, legal documents are included, and the custom installer matches the release metadata size and SHA-512. Installer SHA-256: `ae67fd4064aa626c1e81023d423f9471ca1557e39bfc312509a8b69e704e6397`.
+- The packaged ASAR passes the hidden 0.13 UI checks. Its runtime 0.6.0 JAR matches the packaged manifest and legal documents are included.
+- Publishing detected that the repository had become public. The owner explicitly chose to keep it public and publish; 0.13 was then configured for public in-app updates without GitHub credentials. Git history remains unchanged.
 - 60 Node tests pass. New output tests cover fragmented UTF-8/XML, severity, bounded malformed entries, token redaction and retained exception details. Existing vanilla installation folders now also receive Fusion's runtime without being moved.
 - Runtime 0.6.0 retains 49 vanilla, 36 Fabric and 39 Forge mappings. All 49 static mapping audits and JVM screen/hook verification checks pass, including the new turn/camera targets. Real Fabric 1.20.1 with community mods and Forge 1.8.9 prelaunch probes pass before a game window opens.
 - Runtime tests cover free-look camera state without changing player aim, pitch limits, perspective restoration on key release/disable/menu or focus loss/disconnect, configuration persistence, overlay hit regions and rendering. The compact panel and saved menu-size controls were visually reviewed.

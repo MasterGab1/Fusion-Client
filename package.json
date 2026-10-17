@@ -93,7 +93,7 @@
         "repo": "Fusion-Client",
         "releaseType": "draft",
         "channel": "latest",
-        "private": true
+        "private": false
       }
     ],
     "extraFiles": [

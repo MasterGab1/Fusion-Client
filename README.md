@@ -30,7 +30,7 @@ Built-in features work alongside supported Fabric and Forge mods. Fusion keeps t
 
 Use the latest installer from [Releases](https://github.com/MasterGab1/Fusion-Client/releases). Fusion's custom setup, update screen and uninstaller keep the same look. Updates preserve your game data; uninstalling leaves worlds and preferences available for a future reinstall.
 
-This repository and its releases are private. Downloads and in-app updates require access. See [update help](docs/UPDATES.md).
+Downloads and in-app updates are public and do not require GitHub sign-in. See [update help](docs/UPDATES.md).
 
 ## Choose how to test
 
